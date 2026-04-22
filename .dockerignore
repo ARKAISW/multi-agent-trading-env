@@ -1,0 +1,11 @@
+.env
+.venv
+__pycache__
+*.pyc
+checkpoints
+ui/node_modules
+ui/dist
+trading-ui/node_modules
+trading-ui/dist
+notebooks
+tests

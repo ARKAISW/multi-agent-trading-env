@@ -1,0 +1,28 @@
+# Tasks
+
+- [x] Read all project files ([details.md](file:///e:/Development/Round2/details.md), [summary.md](file:///e:/Development/Round2/summary.md), PDF)
+- [x] Create implementation plan (approved, `main.py` → `app.py`)
+- [/] Phase 1 — Project scaffolding & data fetching
+  - [ ] `app.py` entry point
+  - [ ] `requirements.txt`
+  - [ ] `data/fetch_data.py`
+- [ ] Phase 2 — Environment core (`env/`)
+  - [ ] `env/state.py`
+  - [ ] `env/reward.py`
+  - [ ] `env/trading_env.py`
+- [ ] Phase 3 — Agents (`agents/`)
+  - [ ] `agents/researcher.py`
+  - [ ] `agents/fa_agent.py`
+  - [ ] `agents/risk_model.py`
+  - [ ] `agents/trader.py`
+  - [ ] `agents/portfolio_manager.py`
+- [ ] Phase 4 — Training pipeline (`training/`)
+  - [ ] `training/config.py`
+  - [ ] `training/train.py`
+- [ ] Phase 5 — Evaluation & visualization (`utils/`)
+  - [ ] `utils/indicators.py`
+  - [ ] `utils/visualization.py`
+  - [ ] `utils/evaluate.py`
+- [ ] Phase 6 — Submission artifacts
+  - [ ] Colab notebook
+  - [ ] Update [summary.md](file:///e:/Development/Round2/summary.md)

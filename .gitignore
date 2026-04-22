@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+ENV/
+
+# Data & Models
+# Ignore all CSV and JSONL files in data/ except possibly .gitkeep if it exists
+data/*.csv
+data/*.jsonl
+checkpoints/
+models/
+plots/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# VS Code
+.vscode/
+
+# Project Specific
+training/outputs/
+*.pdf
+policy/
+notebooks/.ipynb_checkpoints/
+
+# Node / JS
+node_modules/
+dist/
+build/
+.cache/
+.npm/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
