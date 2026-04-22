@@ -15,6 +15,14 @@ checkpoints/
 models/
 plots/
 
+# Agent Prompts (Local Only)
+GEMINI.md
+visualizationindie.md
+task.md
+details.md
+addition.md
+summary.md
+
 # Environment
 .env
 .env.local
