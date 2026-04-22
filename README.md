@@ -1,4 +1,4 @@
-# 🌌 GeminiTrading: Multi-Agent RL Ecosystem
+# 🌌 Multi-Agent Trading Environment (MATE)
 
 [![OpenEnv](https://img.shields.io/badge/Environment-OpenEnv-blue.svg)](https://github.com/OpenEnv)
 [![Hackathon](https://img.shields.io/badge/Hackathon-OpenEnv%20April%20%2726-orange.svg)](https://hackathon.openenv.org)
