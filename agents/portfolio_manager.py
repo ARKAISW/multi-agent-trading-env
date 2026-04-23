@@ -10,7 +10,7 @@ load_dotenv()
 class PortfolioManager:
     """
     Meta-agent that oversees all other agents.
-    Uses Gemini LLM for strategic overrides if available.
+    Uses an optional OpenAI-compatible LLM for strategic overrides.
     """
 
     def __init__(self, performance_window: int = 10, override_threshold: float = 0.15, fast_mode: bool = False):
@@ -21,9 +21,11 @@ class PortfolioManager:
         self._reward_history = []
         self._grade_history = []
         
-        # Initialize OpenAI Client
+        remote_enabled = os.getenv("ENABLE_REMOTE_PM", "false").lower() == "true"
+
+        # Initialize OpenAI client only when explicitly enabled.
         self.client = None
-        if os.getenv("OPENAI_API_KEY"):
+        if remote_enabled and os.getenv("OPENAI_API_KEY"):
             try:
                 self.client = OpenAI(
                     api_key=os.getenv("OPENAI_API_KEY"),
@@ -93,4 +95,3 @@ class PortfolioManager:
     def reset(self):
         self._reward_history = []
         self._grade_history = []
-

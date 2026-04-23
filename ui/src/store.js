@@ -27,7 +27,7 @@ const initialState = {
     name: 'Desk Policy',
     mode: 'Rule Fallback',
     policy_active: false,
-    note: 'Enable USE_LOCAL_POLICY=true to run the fine-tuned local model.',
+    note: 'Local policy is disabled by default for demo builds. Enable USE_LOCAL_POLICY=true after mounting a trained model.',
   },
 };
 

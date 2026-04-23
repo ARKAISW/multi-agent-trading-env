@@ -1,7 +1,6 @@
 import os
 import json
 import numpy as np
-import openai
 from openai import OpenAI
 from typing import Dict, Any
 from dotenv import load_dotenv
@@ -16,15 +15,18 @@ class LLMJudge:
 
     def __init__(self, api_key: str = None, base_url: str = None):
         self.base_url = base_url or os.getenv("OPENAI_BASE_URL")
+        remote_enabled = os.getenv("ENABLE_REMOTE_JUDGE", "false").lower() == "true"
         resolved_key = api_key or os.getenv("OPENAI_API_KEY")
         if not resolved_key and self.base_url and "groq.com" in self.base_url:
             resolved_key = os.getenv("GROQ_API_KEY")
 
-        self.enabled = bool(resolved_key)
-        self.client = OpenAI(
-            api_key=resolved_key,
-            base_url=self.base_url # For Groq/Together/Samba
-        )
+        self.enabled = remote_enabled and bool(resolved_key)
+        self.client = None
+        if self.enabled:
+            self.client = OpenAI(
+                api_key=resolved_key,
+                base_url=self.base_url # For Groq/Together/Samba
+            )
         self.model = os.getenv("JUDGE_MODEL", "llama-3.3-70b-versatile")
         self._warned = False
 

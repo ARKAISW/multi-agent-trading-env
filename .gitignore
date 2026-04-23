@@ -33,7 +33,7 @@ summary.md
 
 # Project Specific
 training/outputs/
-*.pdf
+# *.pdf
 policy/
 notebooks/.ipynb_checkpoints/
 

@@ -1,0 +1,35 @@
+# OpenEnv Manifesto
+version: "1.0"
+name: "MATE (Multi-Agent Trading Environment)"
+description: "A high-fidelity multi-agent RL environment for quantitative trading strategy discovery."
+author: "Arka Sarkar"
+
+# Environment Specification
+environment:
+  entry_point: "env.trading_env:TradingEnv"
+  type: "gymnasium"
+  observation_space:
+    shape: [23]
+    dtype: "float32"
+    description: "Market indicators, portfolio exposure, and risk metrics."
+  action_space:
+    type: "dict"
+    items:
+      direction: { type: "int", low: 0, high: 2, description: "0: Hold, 1: Buy, 2: Sell" }
+      size: { type: "float", low: 0.0, high: 1.0, description: "Normalized position size" }
+      sl: { type: "float", description: "Stop Loss price" }
+      tp: { type: "float", description: "Take Profit price" }
+
+# Server Configuration
+server:
+  port: 7860
+  endpoints:
+    reset: "/openenv/reset"
+    step: "/openenv/step"
+
+# Metadata for Judges
+tags:
+  - "Multi-Agent"
+  - "Finance"
+  - "High-Performance"
+  - "Verifiable Rewards"

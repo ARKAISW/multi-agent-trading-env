@@ -61,7 +61,7 @@ def make_initial_state():
             "name": "Desk Policy",
             "mode": "Rule Fallback",
             "policy_active": False,
-            "note": "Enable USE_LOCAL_POLICY=true to run the fine-tuned local model.",
+            "note": "Local policy is disabled by default for demo builds. Enable USE_LOCAL_POLICY=true after mounting a trained model.",
         },
     }
 
@@ -263,7 +263,6 @@ def stop_sim():
     return {"status": "stopped"}
 
 
-@app.post("/step")
 @app.post("/api/step")
 def step_sim():
     global runner
@@ -271,6 +270,46 @@ def step_sim():
         runner = SimulationRunner()
     runner.step()
     return {"status": "stepped"}
+
+
+# --- OpenEnv Standard Endpoints for Judges ---
+
+@app.post("/openenv/reset")
+async def openenv_reset():
+    """Standard OpenEnv reset endpoint for remote evaluators."""
+    global runner
+    if runner is None:
+        runner = SimulationRunner()
+    obs, info = runner.env.reset()
+    # Ensure obs is a list for JSON serialization
+    return {"observation": obs.tolist(), "info": info}
+
+
+@app.post("/openenv/step")
+async def openenv_step(action: dict):
+    """Standard OpenEnv step endpoint for remote evaluators."""
+    global runner
+    if runner is None:
+        runner = SimulationRunner()
+    
+    # The action coming from a remote OpenEnv client is usually a dict
+    # but we need to ensure numpy arrays for our TradingEnv
+    formatted_action = {
+        "direction": int(action.get("direction", 0)),
+        "size": np.array([float(action.get("size", 0.0))], dtype=np.float32),
+        "sl": np.array([float(action.get("sl", 0.0))], dtype=np.float32),
+        "tp": np.array([float(action.get("tp", 0.0))], dtype=np.float32),
+    }
+    
+    obs, reward, terminated, truncated, info = runner.env.step(formatted_action)
+    
+    return {
+        "observation": obs.tolist(),
+        "reward": float(reward),
+        "terminated": bool(terminated),
+        "truncated": bool(truncated),
+        "info": info
+    }
 
 
 if FRONTEND_DIST.exists():

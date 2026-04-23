@@ -76,7 +76,7 @@ def main():
         from env.trading_env import TradingEnv
         print("Generating synthetic GBM data (mu=0.1, sigma=0.2)...")
         env_gen = TradingEnv()
-        df = env_gen._make_dummy_data(n=500, mu=0.1, sigma=0.2)
+        df = env_gen._make_dummy_data_from_profile(n=500, mu=0.1, sigma=0.2)
         print(f"Generated {len(df)} rows of GBM data.\n")
     elif args.fetch_data:
         from data.fetch_data import fetch_yfinance

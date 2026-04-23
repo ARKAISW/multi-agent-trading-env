@@ -49,6 +49,7 @@ class QuantTrader:
             ta_score = 0.0
 
         signals = {
+            "raw_state": observation.tolist() if hasattr(observation, "tolist") else observation,
             "ta_score": ta_score,
             "fa_sentiment": (fa_sentiment * 2.0) - 1.0, # Map back to [-1, 1]
             "position_limit": position_limit,
@@ -87,4 +88,3 @@ class QuantTrader:
             
         size = float(np.clip(size, 0.0, 1.0))
         return direction, size, sl, tp, reasoning
-
