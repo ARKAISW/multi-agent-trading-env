@@ -33,7 +33,9 @@ summary.md
 
 # Project Specific
 training/outputs/
-# *.pdf
+*.pdf
+*.zip
+kaggle_upload/
 policy/
 notebooks/.ipynb_checkpoints/
 
