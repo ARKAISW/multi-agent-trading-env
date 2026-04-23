@@ -1,75 +1,150 @@
-# 🌌 MATE: Multi-Agent Trading Environment
+---
+title: "MATE: Multi-Agent Trading Environment"
+emoji: "🌌"
+colorFrom: "blue"
+colorTo: "indigo"
+sdk: "docker"
+pinned: false
+app_port: 7860
+---
+
+# MATE: Multi-Agent Trading Environment
 
 [![OpenEnv](https://img.shields.io/badge/Environment-OpenEnv-blue.svg)](https://github.com/OpenEnv)
 [![Hackathon](https://img.shields.io/badge/Hackathon-OpenEnv%20April%20%2726-orange.svg)](https://hackathon.openenv.org)
 
-**De-risking AI Trading through specialized agent coordination and verifiable RL.**
+MATE is a multi-agent trading environment built for the OpenEnv April '26 Hackathon. It is optimized for Theme #1, multi-agent interactions: researcher, analyst, risk, trader, and portfolio manager coordinate inside a verifiable market environment with normalized rewards and explicit safety checks.
 
----
+## What Judges Can Test
 
-## 🛑 The Problem
-Traditional AI trading systems are often "black boxes"—single-agent models that make opaque decisions. In volatile markets, these models are prone to catastrophic failures, reward-hacking, and logic hallucination. To be production-ready, AI trading needs **cross-verification**, **multi-agent dissent**, and **verifiable rewards**.
+The Hugging Face Space is expected to expose OpenEnv-compatible endpoints:
 
-## 🏦 Our Solution: MATE
-MATE (Multi-Agent Trading Environment) is a high-fidelity Gymnasium simulation that decomposes trading into five specialized professional roles. Instead of one model doing everything, MATE features a "Desk Architecture":
+- `POST /openenv/reset`
+- `POST /openenv/step`
 
-| Role | Responsibility | Verifiable Signal |
-| :--- | :--- | :--- |
-| **🔍 Researcher** | Technical Analysis | RSI/MACD Consensus |
-| **📉 Analyst** | Fundamental Sentiment | Macro Tone/News |
-| **🛡️ Risk** | Capital Preservation | 1% Kelly Criterion |
-| **⚔️ Trader** | Execution (CoT) | RRR-based SL/TP |
-| **💼 manager** | Global Oversight | Strategic Action Overrides |
+Reset returns:
 
----
+```json
+{
+  "observation": [0.0],
+  "info": {
+    "grade": 0.0
+  }
+}
+```
 
-## 🔬 The Environment
-MATE is built on **OpenEnv** and features a robust **Anti-Hacking Reward Engine**:
-- **Chain-of-Thought (CoT)**: Agents must reason in `<thought>` tags before acting.
-- **Independent Verifiers**: Reward functions penalize lazy reasoning, format errors, and risk limit breaches.
-- **Curriculum Learning**: Supports Easy (Trending), Medium (Ranging), and Hard (Crypto) regimes.
+Step accepts:
 
----
+```json
+{
+  "direction": 1,
+  "size": 0.25,
+  "sl": 0.0,
+  "tp": 0.0
+}
+```
 
-## 📊 Results & Performance
+Step returns:
 
-### Trained Agent vs. Random Baseline
-Our **GRPO (Group Relative Policy Optimization)** training pipeline using **Unsloth** delivers significant quantitative improvements.
+```json
+{
+  "observation": [0.0],
+  "reward": 0.5,
+  "terminated": false,
+  "truncated": false,
+  "info": {
+    "grade": 0.62,
+    "trade_count": 1
+  }
+}
+```
 
-![Baseline Comparison](file:///E:/Development/Round2/docs/plots/baseline_comparison.png)
-*Figure 1: Performance distribution showing our trained agent significantly outperforming the random baseline with a tighter reward variance.*
+## Local Checks
 
-### Convergence
-Thanks to Unsloth's 4-bit LoRA patching, we achieved stable convergence on 500M parameter models (Qwen 0.5B) in under 15 minutes on Kaggle T4 GPUs.
+Install deps:
 
-![Reward Curve](file:///E:/Development/Round2/docs/plots/reward_curve.png)
-*Figure 2: Normalized reward curve showing steady improvement as the agent learns to satisfy format, risk, and profit constraints.*
-
----
-
-## 🚀 Getting Started
-
-### 1. Requirements
 ```bash
 pip install -r requirements-space.txt
 ```
 
-### 2. Run the Benchmark
-Compare the latest policy against a random baseline:
+Run the smoke test:
+
 ```bash
-python training/benchmark.py --episodes 50
+python -u tests/smoke_test.py
 ```
 
-### 3. Launch the 2D Office UI
-Visualize the multi-agent coordination in real-time:
+Run the UI backend:
+
 ```bash
 python app.py --demo
 ```
 
----
+Run a quick environment/training pass:
 
-## 🏛️ Why It Matters
-MATE demonstrates how **Multi-Agent Reinforcement Learning (MARL)** can be made verifiable and professional. By enforcing separate concerns (Risk vs. Alpha), we create a system that is not only more profitable but also significantly safer for institutional deployment.
+```bash
+python app.py --gbm --fast
+```
 
-**Built for the OpenEnv April '26 Hackathon.**
-**Author**: [Arka Sarkar](mailto:arkasarkar1507@gmail.com)
+## Hugging Face Deployment
+
+This repo is set up for a Docker Space.
+
+- The container listens on port `7860`.
+- The default runtime is secret-free.
+- `USE_LOCAL_POLICY=false` by default.
+- `ENABLE_REMOTE_PM=false` by default.
+- `ENABLE_REMOTE_JUDGE=false` by default.
+
+That means the Space should boot and respond even without mounted model artifacts or API keys.
+
+After deployment, test the judge-facing contract directly:
+
+```bash
+curl -X POST https://<your-space>.hf.space/openenv/reset
+```
+
+```bash
+curl -X POST https://<your-space>.hf.space/openenv/step \
+  -H "Content-Type: application/json" \
+  -d "{\"direction\":1,\"size\":0.25,\"sl\":0.0,\"tp\":0.0}"
+```
+
+## Training Path
+
+For submission, keep environment deployment and model training separate.
+
+- CPU warm start from trajectories:
+
+```bash
+python training/train_cpu.py
+```
+
+- GPU-only GRPO refinement:
+
+```bash
+python training/train_grpo.py --regime hard
+```
+
+`training/train_grpo.py` is intended for CUDA-backed machines such as Hugging Face GPU runners. On CPU-only machines it exits early with a clear error.
+
+## Evaluation Notes
+
+The environment uses multiple verifier-style reward components rather than one opaque reward:
+
+- format compliance
+- action and signal alignment
+- position-limit compliance
+- trend/profit consistency
+
+This is the core submission claim: the agent is evaluated not only on reward, but on whether its behavior is structurally valid and risk-aware.
+
+## Files That Matter Most
+
+- [openenv.yaml](/e:/Development/Round2/openenv.yaml)
+- [api/server.py](/e:/Development/Round2/api/server.py)
+- [env/trading_env.py](/e:/Development/Round2/env/trading_env.py)
+- [env/reward.py](/e:/Development/Round2/env/reward.py)
+- [training/train_grpo.py](/e:/Development/Round2/training/train_grpo.py)
+- [tests/smoke_test.py](/e:/Development/Round2/tests/smoke_test.py)
+
+Built for the OpenEnv April '26 Hackathon.
