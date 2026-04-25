@@ -116,7 +116,7 @@ def main():
     model, tokenizer = FastLanguageModel.from_pretrained(
         model_name=MODEL_NAME,
         max_seq_length=MAX_SEQ_LENGTH,
-        dtype=None,
+        dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
         load_in_4bit=True,
     )
     model = FastLanguageModel.get_peft_model(
