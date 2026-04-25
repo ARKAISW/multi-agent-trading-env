@@ -175,6 +175,7 @@ export const OfficeScene = ({ agents, flow, trade, currentStep, isRunning, engin
   const tradeTone =
     trade?.side === 'BUY' ? 'text-emerald-600' : trade?.side === 'SELL' ? 'text-rose-600' : 'text-stone-500';
 
+  return (
     <div className="relative min-h-[680px] w-full overflow-hidden rounded-[2.4rem] border border-[#7d5a4f]/20 shadow-[0_34px_90px_rgba(82,49,31,0.18)] bg-[#d2a382]">
       {/* pixel-art background */}
       <img
