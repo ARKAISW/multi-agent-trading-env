@@ -34,7 +34,7 @@ from env.multi_agent_env import (
 )
 
 
-# ─── Trajectory Buffer ─────────────────────────────────────────────────────────
+# â”€â”€â”€ Trajectory Buffer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class TrajectoryBuffer:
     """Rollout buffer for one agent across many steps."""
@@ -67,10 +67,10 @@ class TrajectoryBuffer:
         return len(self.rewards)
 
 
-# ─── Simple Rule Policies (Baselines / Warm-Start) ────────────────────────────
+# â”€â”€â”€ Simple Rule Policies (Baselines / Warm-Start) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class RuleRiskManagerPolicy:
-    """Baseline rule-based RM policy — sets constraints based on obs."""
+    """Baseline rule-based RM policy â€” sets constraints based on obs."""
 
     def act(self, obs: np.ndarray) -> np.ndarray:
         drawdown      = float(obs[19]) if len(obs) > 19 else 0.0
@@ -111,9 +111,9 @@ class RuleTraderPolicy:
         rm_limit  = float(obs[24]) if len(obs) > 24 else 0.5   # RM size limit from message
 
         if rsi < 0.35 and bb_pos < 0.25:
-            direction = 1  # Oversold → BUY
+            direction = 1  # Oversold â†’ BUY
         elif rsi > 0.65 and bb_pos > 0.75:
-            direction = 2  # Overbought → SELL
+            direction = 2  # Overbought â†’ SELL
         else:
             direction = 0  # HOLD
 
@@ -126,11 +126,11 @@ class RuleTraderPolicy:
         }
 
 
-# ─── Training Loop ─────────────────────────────────────────────────────────────
+# â”€â”€â”€ Training Loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 def collect_rollout(
     env: MultiAgentTradingEnv,
-    policies: Dict,  # agent_id → policy object with .act(obs)
+    policies: Dict,  # agent_id â†’ policy object with .act(obs)
     max_steps: int = 300,
 ) -> Tuple[Dict[str, TrajectoryBuffer], Dict]:
     """
@@ -288,7 +288,7 @@ def _save_metrics(metrics: Dict, path: Path):
         json.dump(serialized, f, indent=2)
 
 
-# ─── Entry Point ───────────────────────────────────────────────────────────────
+# â”€â”€â”€ Entry Point â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Multi-Agent Online RL Training")

@@ -21,29 +21,20 @@ import pandas as pd
 from gymnasium import spaces
 
 from pettingzoo import AECEnv
-
-try:
-    # PettingZoo 1.25.0+ exposes the selector class as AgentSelector.
-    from pettingzoo.utils import AgentSelector
-except ImportError:
-    # Older releases expose agent_selector directly, while some transitional
-    # layouts expose a module with AgentSelector inside it.
-    from pettingzoo.utils import agent_selector as _agent_selector
-
-    AgentSelector = getattr(_agent_selector, "AgentSelector", _agent_selector)
+from pettingzoo.utils import agent_selector
 
 from env.state import MarketState, PortfolioState, RiskState, get_observation
 from env.reward import compute_raw_reward, normalize_reward, compute_grade
 from utils.indicators import compute_indicators
 
 
-# ─── Agent IDs ─────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Agent IDs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 RISK_MANAGER    = "risk_manager_0"
 PORTFOLIO_MGR   = "portfolio_manager_0"
 TRADER          = "trader_0"
 ALL_AGENTS      = [RISK_MANAGER, PORTFOLIO_MGR, TRADER]
 
-# ─── Observation Sizes ──────────────────────────────────────────────────────────
+# â”€â”€â”€ Observation Sizes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Base market+portfolio+risk obs size: 14 + 5 + 5 = 24
 BASE_OBS_SIZE = 24
 # Risk Manager message appended to PM and Trader observations: [size_limit, allow_new, force_reduce]
@@ -56,7 +47,7 @@ class MultiAgentTradingEnv(AECEnv):
     """
     A PettingZoo AEC environment for decentralized multi-agent trading governance.
 
-    Turn order per step: risk_manager_0 → portfolio_manager_0 → trader_0
+    Turn order per step: risk_manager_0 â†’ portfolio_manager_0 â†’ trader_0
     On each full cycle, the market advances by one candle.
 
     Observations:
@@ -65,9 +56,9 @@ class MultiAgentTradingEnv(AECEnv):
       trader_0:         base_obs + rm_message + pm_message (24 + 3 + 2 = 29,)
 
     Actions:
-      risk_manager_0:   Box(3,) — [size_limit, allow_new_positions, force_reduce] — continuous
-      portfolio_mgr_0:  Box(2,) — [capital_allocation_fraction, override_flag] — continuous
-      trader_0:         Dict — direction (Discrete 3), size (Box 1), sl (Box 1), tp (Box 1)
+      risk_manager_0:   Box(3,) â€” [size_limit, allow_new_positions, force_reduce] â€” continuous
+      portfolio_mgr_0:  Box(2,) â€” [capital_allocation_fraction, override_flag] â€” continuous
+      trader_0:         Dict â€” direction (Discrete 3), size (Box 1), sl (Box 1), tp (Box 1)
     """
 
     metadata = {
@@ -97,11 +88,11 @@ class MultiAgentTradingEnv(AECEnv):
         self.commission = commission
         self.max_steps = max_steps or (len(self.df) - 1)
 
-        # ── PettingZoo required attributes ──────────────────────────────────
+        # â”€â”€ PettingZoo required attributes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         self.agents = ALL_AGENTS[:]
         self.possible_agents = ALL_AGENTS[:]
 
-        # ── Observation spaces ──────────────────────────────────────────────
+        # â”€â”€ Observation spaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         self.observation_spaces = {
             RISK_MANAGER:   spaces.Box(low=-np.inf, high=np.inf,
                                        shape=(BASE_OBS_SIZE,), dtype=np.float32),
@@ -111,7 +102,7 @@ class MultiAgentTradingEnv(AECEnv):
                                        shape=(BASE_OBS_SIZE + RM_MSG_SIZE + PM_MSG_SIZE,), dtype=np.float32),
         }
 
-        # ── Action spaces ───────────────────────────────────────────────────
+        # â”€â”€ Action spaces â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         self.action_spaces = {
             RISK_MANAGER:  spaces.Box(low=np.array([0.01, 0.0, 0.0], dtype=np.float32),
                                       high=np.array([1.0, 1.0, 1.0], dtype=np.float32),
@@ -127,13 +118,13 @@ class MultiAgentTradingEnv(AECEnv):
             }),
         }
 
-        # ── Internal state (reset before first use) ─────────────────────────
-        self._agent_selector = AgentSelector(ALL_AGENTS)
+        # â”€â”€ Internal state (reset before first use) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        self._agent_selector = agent_selector(ALL_AGENTS)
         self._reset_internal_state()
 
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # PettingZoo required API
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def reset(self, seed: Optional[int] = None, options: Optional[dict] = None):
         if seed is not None:
@@ -162,23 +153,15 @@ class MultiAgentTradingEnv(AECEnv):
             # Dead-step: PZ compliance requires we handle this
             self._was_dead_step(action)
             return
-        # The current agent's cumulative reward was already returned by last().
-        # Reset its accumulation window before processing a fresh action.
-        self._cumulative_rewards[agent] = 0.0
-        self._clear_rewards()
-        # The current agent's cumulative reward was already returned by last().
-        # Reset its accumulation window before processing a fresh action.
-        self._cumulative_rewards[agent] = 0.0
-        self._clear_rewards()
 
-        # ── Route action to the correct handler ────────────────────────────
+        # â”€â”€ Route action to the correct handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if agent == RISK_MANAGER:
             self._step_risk_manager(action)
         elif agent == PORTFOLIO_MGR:
             self._step_portfolio_manager(action)
         elif agent == TRADER:
             self._step_trader(action)
-            # After the trader acts, the market cycle is complete → advance step
+            # After the trader acts, the market cycle is complete â†’ advance step
             self._advance_market()
 
         # Advance to next agent
@@ -207,9 +190,9 @@ class MultiAgentTradingEnv(AECEnv):
     def close(self):
         pass
 
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Per-Agent Step Handlers
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _step_risk_manager(self, action: np.ndarray):
         """
@@ -217,7 +200,7 @@ class MultiAgentTradingEnv(AECEnv):
         action = [size_limit (0-1), allow_new_positions (0-1), force_reduce (0-1)]
 
         Reward logic (adversarial):
-          +0.2  for restricting a dangerous action (high drawdown → low size_limit)
+          +0.2  for restricting a dangerous action (high drawdown â†’ low size_limit)
           -0.3  for each $ portfolio value LOST since it last acted (it shares downside pain)
           +0.05 for being compliant (not overriding a healthy portfolio)
         """
@@ -252,9 +235,7 @@ class MultiAgentTradingEnv(AECEnv):
         portfolio_delta_pct = (curr_val - prev_val) / (self.initial_cash + 1e-10)
         rm_reward += min(portfolio_delta_pct * 0.5, 0.0)  # Only downside pain
 
-        # Defer emission until the Trader finishes the cycle so PettingZoo sees
-        # one reward publication per cycle.
-        self._rm_cycle_reward = float(rm_reward)
+        self._pending_rewards[RISK_MANAGER] = rm_reward
 
     def _step_portfolio_manager(self, action: np.ndarray):
         """
@@ -272,7 +253,8 @@ class MultiAgentTradingEnv(AECEnv):
         self._pm_capital_allocation = cap_alloc
         self._pm_override_strength  = override_s
 
-        # PM reward is deferred until after the trader executes and the outcome is known.
+        # PM reward deferred to after trader executes (knows the outcome)
+        self._pending_rewards[PORTFOLIO_MGR] = 0.0  # Will be updated in _advance_market
 
     def _step_trader(self, action: Dict):
         """
@@ -291,7 +273,7 @@ class MultiAgentTradingEnv(AECEnv):
 
         size = float(np.clip(size_raw, 0.0, 1.0))
 
-        # ── Apply Risk Manager constraints ──────────────────────────────────
+        # â”€â”€ Apply Risk Manager constraints â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         rm_size_limit  = float(self._rm_message[0])
         rm_allow_new   = bool(self._rm_message[1] > 0.5)
         rm_force_reduce = bool(self._rm_message[2] > 0.5)
@@ -323,7 +305,7 @@ class MultiAgentTradingEnv(AECEnv):
             })
             direction = 2  # Flip to reduce
 
-        # ── Apply Portfolio Manager override ────────────────────────────────
+        # â”€â”€ Apply Portfolio Manager override â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         cap_alloc  = self._pm_capital_allocation
         if direction != 0 and size > cap_alloc:
             interventions.append({
@@ -343,7 +325,7 @@ class MultiAgentTradingEnv(AECEnv):
             })
             direction = 0
 
-        # ── Auto SL/TP (governance baseline) ───────────────────────────────
+        # â”€â”€ Auto SL/TP (governance baseline) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         current_price = self._market.current_price()
         DEFAULT_SL = 0.02
         if direction != 0 and sl_input <= 0:
@@ -368,14 +350,14 @@ class MultiAgentTradingEnv(AECEnv):
             "original_size": size_raw,
         }
 
-        # Compliance reward/penalty — will be finalized after market moves
+        # Compliance reward/penalty â€” will be finalized after market moves
         n_interventions = len(interventions)
         compliance_bonus = 0.15 if (n_interventions == 0 and direction != 0) else (-0.05 * n_interventions)
         self._trader_compliance_bonus = compliance_bonus
 
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Market Advance (called after Trader acts)
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _advance_market(self):
         """Execute the pending trade, advance market, compute final rewards."""
@@ -423,12 +405,12 @@ class MultiAgentTradingEnv(AECEnv):
             price_trend=price_trend,
         )
 
-        # ── Trader reward ───────────────────────────────────────────────────
+        # â”€â”€ Trader reward â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         trader_reward = normalize_reward(raw_r + self._trader_compliance_bonus)
-        self.rewards[TRADER] = float(trader_reward)
+        self._pending_rewards[TRADER] = float(trader_reward)
         self._episode_rewards.append(trader_reward)
 
-        # ── PM reward: grade-based portfolio performance ────────────────────
+        # â”€â”€ PM reward: grade-based portfolio performance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         normalized_profit  = float(np.clip((profit + 1.0) / 2.0, 0.0, 1.0))
         normalized_sharpe  = float(np.clip((self._risk.sharpe_ratio() + 2.0) / 4.0, 0.0, 1.0))
         consistency = float(np.mean(np.diff(np.array(self._episode_values)) > 0)) if len(self._episode_values) > 2 else 0.5
@@ -438,16 +420,17 @@ class MultiAgentTradingEnv(AECEnv):
             "drawdown": float(self._risk.max_drawdown),
             "consistency": consistency,
         }))
-        pm_reward = (grade - 0.5) * 0.4   # Grade in [0,1] → centered reward
+        pm_reward = (grade - 0.5) * 0.4   # Grade in [0,1] â†’ centered reward
         if self._risk.max_drawdown > 0.20:
             pm_reward -= 0.15              # PM penalized for deep drawdown
-        self.rewards[PORTFOLIO_MGR] = float(pm_reward)
+        self._pending_rewards[PORTFOLIO_MGR] = float(pm_reward)
 
-        # ── RM: shared downside with final portfolio value ──────────────────
+        # â”€â”€ RM: shared downside with final portfolio value â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        # We ADD to whatever penalty was already set in _step_risk_manager
         rm_pain = min(profit * 0.5, 0.0)   # Only share downside
-        self.rewards[RISK_MANAGER] = float(self._rm_cycle_reward + rm_pain)
+        self._pending_rewards[RISK_MANAGER] = float(self._pending_rewards.get(RISK_MANAGER, 0.0) + rm_pain)
 
-        # ── Termination Check ───────────────────────────────────────────────
+        # â”€â”€ Termination Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         terminated = (
             self._current_step >= self.max_steps or
             new_value < self.initial_cash * 0.10   # Blowup condition
@@ -482,19 +465,17 @@ class MultiAgentTradingEnv(AECEnv):
             "sharpe_ratio": float(self._risk.sharpe_ratio()),
             "grade": grade,
             "governance": gov_record,
-            "rewards": dict(self.rewards),
+            "rewards": dict(self._pending_rewards),
         }
         self.infos[RISK_MANAGER]  = {"step": self._current_step, "drawdown": float(self._risk.max_drawdown)}
         self.infos[PORTFOLIO_MGR] = {"step": self._current_step, "grade": grade}
 
         self._prev_portfolio_value = new_value
         self._pending_trade = None
-        self._rm_cycle_reward = 0.0
-        self._rm_cycle_reward = 0.0
 
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Observation Generation
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _generate_observations(self):
         base_obs = get_observation(self._market, self._portfolio, self._risk, self.ticker)
@@ -504,9 +485,9 @@ class MultiAgentTradingEnv(AECEnv):
             TRADER:        np.concatenate([base_obs, self._rm_message, self._pm_message]),
         }
 
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Internal Helpers
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     def _reset_internal_state(self):
         self._market    = MarketState(prices=self.df, current_step=0)
@@ -521,7 +502,7 @@ class MultiAgentTradingEnv(AECEnv):
         self._pm_override_strength  = 0.0
 
         self._pending_trade  = None
-        self._rm_cycle_reward = 0.0
+        self._pending_rewards = {ag: 0.0 for ag in ALL_AGENTS}
         self._trader_compliance_bonus = 0.0
 
         self._episode_values  = [self.initial_cash]
@@ -534,8 +515,9 @@ class MultiAgentTradingEnv(AECEnv):
                               for ag in ALL_AGENTS}
 
     def _accumulate_rewards(self):
-        """Add the current step rewards into PettingZoo cumulative tracking."""
+        """Move pending rewards into PZ cumulative reward tracking."""
         for ag in self.agents:
+            self.rewards[ag] = self._pending_rewards.get(ag, 0.0)
             self._cumulative_rewards[ag] += self.rewards[ag]
 
     def _execute_trade(
@@ -647,9 +629,9 @@ class MultiAgentTradingEnv(AECEnv):
         tmp = TradingEnv.__new__(TradingEnv)
         return tmp._generate_market_data(n=n, difficulty=difficulty)
 
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Convenience
-    # ───────────────────────────────────────────────────────────────────────────
+    # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     @functools.lru_cache(maxsize=None)
     def _obs_space(self, agent: str) -> spaces.Space:
