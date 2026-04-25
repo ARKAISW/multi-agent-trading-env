@@ -1,6 +1,3 @@
-Here is the complete markdown content you can copy and paste directly:
-
-```markdown
 # OpenEnv Hackathon: Build at the Bleeding Edge of AI
 
 **Event:** India's Biggest Mega AI Hackathon
