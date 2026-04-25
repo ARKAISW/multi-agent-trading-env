@@ -126,28 +126,13 @@ Verifiers #3 and #5 are **the differentiators**: they read the RM's dynamic `siz
 
 ## 📊 Results: From Reckless to Self-Regulated
 
-### Per-Agent Reward Curves
-
-![QuantHive: Per-Agent Rewards](plots/reward_curve.png)
-*Figure 1: Per-agent discounted returns over training episodes. RM learns to restrict during drawdown while Trader learns to comply with governance.*
-
-### Policy Convergence
-
-![QuantHive: Loss Curve](plots/loss_curve.png)
-*Figure 2: PnL convergence over training — Trader learns profitable strategies within governance constraints.*
-
-### Live Training Evidence (Kaggle)
+### Live Training Evidence (Kaggle Qwen 2.5 1.5B)
 
 ![Kaggle Training Overview](plots/kaggle_training_loss.png)
-*Figure 3: Live GRPO training logs showing loss and reward curves converging over the 250 steps.*
+*Figure 2: Live GRPO training logs showing loss and reward curves converging over 250 steps.*
 
 ![Kaggle Reward Breakdown](plots/kaggle_training_reward.png)
-*Figure 4: Detailed reward progression indicating rapid convergence on format, risk compliance, and governance.*
-
-### Baseline vs Trained
-
-![QuantHive: Baseline vs Trained](plots/baseline_comparison.png)
-*Figure 5: Early vs late training performance comparison across key metrics.*
+*Figure 3: Detailed reward progression indicating rapid convergence on format, risk compliance, and governance.*
 
 ### Training Outcomes
 
