@@ -89,7 +89,7 @@ def main():
     if not torch.cuda.is_available():
         raise SystemExit("❌ CUDA not available. Use GPU hardware.")
     print(f"✅ CUDA available: {torch.cuda.get_device_name(0)}")
-    print(f"   VRAM: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
+    print(f"   VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
     # ── Step 2: Generate scenarios ────────────────────────────────────────────
     from training.prompt_utils import (
