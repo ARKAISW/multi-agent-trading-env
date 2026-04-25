@@ -144,6 +144,7 @@ def main():
         "unsloth_num_chunks": 1,
         "unsloth_grpo_mini_batch": -1,
         "unsloth_grpo_logit_chunk_multiplier": 1,
+        "unsloth_logit_chunk_multiplier": 1,
         "loss_type": "grpo",
     }
     for attr, default in _unsloth_attrs.items():
