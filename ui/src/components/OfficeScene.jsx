@@ -39,11 +39,11 @@ const AGENT_THEMES = {
 
 /* Desk positions (% of scene) — tuned to sit on the pixel-art desks */
 const STATIONS = {
-  Researcher:           { left: '3%',  top: '8%',  anchor: [100, 140] },
-  'Risk Manager':       { left: '30%', top: '5%',  anchor: [420, 120] },
-  'Portfolio Manager':  { left: '58%', top: '8%',  anchor: [730, 140] },
-  'Fundamental Analyst':{ left: '10%', top: '52%', anchor: [230, 430] },
-  Trader:               { left: '52%', top: '52%', anchor: [700, 430] },
+  Researcher:           { left: '4%',  top: '25%',  anchor: [100, 140] },
+  'Risk Manager':       { left: '26%', top: '22%',  anchor: [420, 120] },
+  'Portfolio Manager':  { left: '55%', top: '25%',  anchor: [730, 140] },
+  'Fundamental Analyst':{ left: '10%', top: '56%', anchor: [230, 430] },
+  Trader:               { left: '48%', top: '56%', anchor: [700, 430] },
 };
 
 const MARKET_ANCHOR = [950, 280];
@@ -176,7 +176,7 @@ export const OfficeScene = ({ agents, flow, trade, currentStep, isRunning, engin
     trade?.side === 'BUY' ? 'text-emerald-600' : trade?.side === 'SELL' ? 'text-rose-600' : 'text-stone-500';
 
   return (
-    <div className="relative min-h-[680px] overflow-hidden rounded-[2.4rem] border border-[#7d5a4f]/20 shadow-[0_34px_90px_rgba(82,49,31,0.18)]">
+    <div className="relative w-full aspect-[1200/620] overflow-hidden rounded-[2.4rem] border border-[#7d5a4f]/20 shadow-[0_34px_90px_rgba(82,49,31,0.18)]">
       {/* pixel-art background */}
       <img
         src={officeBg}
@@ -207,9 +207,9 @@ export const OfficeScene = ({ agents, flow, trade, currentStep, isRunning, engin
         </div>
 
         {/* engine + trade info card */}
-        <div className="min-w-[260px] rounded-2xl border border-white/20 bg-black/50 px-5 py-4 text-right backdrop-blur-md">
+        <div className="max-w-[320px] rounded-2xl border border-white/20 bg-black/50 px-5 py-4 text-right backdrop-blur-md">
           <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60">Engine</div>
-          <div className="mt-1 text-lg font-bold text-white">{engine?.name || 'Desk Policy'}</div>
+          <div className="mt-1 text-base leading-tight font-bold text-white break-words">{engine?.name || 'Desk Policy'}</div>
           <div className="text-sm text-white/70">{engine?.mode || 'Rule Fallback'}</div>
           <div className={`mt-2 text-xs font-bold uppercase tracking-[0.26em] ${
             trade?.side === 'BUY' ? 'text-emerald-400' : trade?.side === 'SELL' ? 'text-rose-400' : 'text-white/50'
@@ -227,7 +227,10 @@ export const OfficeScene = ({ agents, flow, trade, currentStep, isRunning, engin
       </svg>
 
       {/* market board overlay (right side) */}
-      <div className="absolute right-[3%] top-[30%] z-[6] w-[220px] rounded-2xl border border-white/20 bg-black/55 px-4 py-3 backdrop-blur-md">
+      <div 
+        className="absolute z-[6] w-[220px] rounded-2xl border border-white/20 bg-black/55 px-4 py-3 backdrop-blur-md"
+        style={{ left: '76%', top: '35%' }}
+      >
         <div className="mb-2 flex items-center justify-between">
           <div className="text-xs font-bold text-white">📈 Market Board</div>
           <div className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${
