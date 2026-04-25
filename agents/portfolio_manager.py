@@ -75,18 +75,24 @@ class PortfolioManager:
                     temperature=0.1,
                     response_format={"type": "json_object"}
                 )
-                data = json.loads(response.choices[0].message.content)
-                if data["override"]:
-                    print(f"[PM OVERRIDE] {data['reason']}")
-                    return capital_allocation, (data["new_direction"], data["new_size"])
+                content = response.choices[0].message.content
+                if content:
+                    data = json.loads(content)
+                    if data.get("override"):
+                        print(f"[PM OVERRIDE] {data.get('reason', '')}")
+                        return capital_allocation, (data.get("new_direction", 0), data.get("new_size", 0.0))
             except Exception as e:
                 # print(f"PM LLM Error: {e}") # Suppress to avoid flooding
                 pass 
 
         # Rule-based Fallback
         override_action = None
-        if max_drawdown > self.override_threshold and direction == 1:
-            override_action = (2, 0.3)
+        if max_drawdown > self.override_threshold:
+            # High drawdown: force close any open position
+            if direction == 1:
+                override_action = (2, 0.3)  # Close long / reduce buying
+            elif direction == 2:
+                override_action = (1, 0.3)  # Cover short / reduce shorting
         elif direction in (1, 2) and size > capital_allocation:
             override_action = (direction, capital_allocation)
 

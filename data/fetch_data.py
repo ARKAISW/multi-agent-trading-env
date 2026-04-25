@@ -14,7 +14,10 @@ def fetch_yfinance(ticker: str, start: str, end: str) -> pd.DataFrame:
     """Fetch OHLCV data from Yahoo Finance."""
     import yfinance as yf
 
-    df = yf.download(ticker, start=start, end=end, progress=False)
+    raw_df = yf.download(ticker, start=start, end=end, progress=False)
+    if raw_df is None:
+        return pd.DataFrame()
+    df = pd.DataFrame(raw_df)
     # Flatten multi-level columns if present
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
@@ -22,7 +25,7 @@ def fetch_yfinance(ticker: str, start: str, end: str) -> pd.DataFrame:
     df.columns = ["open", "high", "low", "close", "volume"]
     df.index.name = "date"
     df.dropna(inplace=True)
-    return df
+    return df # type: ignore
 
 
 def fetch_ccxt(exchange_id: str, symbol: str, timeframe: str = "1d",

@@ -40,13 +40,14 @@ class RiskModeler:
         
         atr_ratio = observation[13]
 
-        # Portfolio features
-        exposure_ratio = observation[15]
+        # Portfolio features (new 5-feature layout)
+        exposure_ratio = observation[15]  # long exposure
         portfolio_return = observation[16]
+        short_exposure = observation[18]  # short exposure
 
-        # Risk features
-        current_drawdown = observation[18]
-        volatility = observation[21]
+        # Risk features (shifted by +1 due to short_exposure insertion)
+        current_drawdown = observation[19]
+        volatility = observation[22]
 
         # --- 1% Risk Rule ---
         sl_distance_ratio = 2.0 * atr_ratio

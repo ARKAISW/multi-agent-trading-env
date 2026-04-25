@@ -4,7 +4,7 @@ Reads price data + indicators → outputs trade signals with confidence + reason
 """
 
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 class QuantResearcher:
@@ -16,7 +16,7 @@ class QuantResearcher:
     def __init__(self):
         self.name = "QuantResearcher"
 
-    def __call__(self, observation: np.ndarray, market_row: dict = None) -> Tuple[str, float, str]:
+    def __call__(self, observation: np.ndarray, market_row: Optional[dict] = None) -> Tuple[str, float, str]:
         """
         Generate a signal and reasoning from the observation.
         Mapping follows env/state.py:

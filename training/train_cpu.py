@@ -13,7 +13,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 # 1. Configuration
-MODEL_NAME = "HuggingFaceTB/SmolLM-135M-Instruct"
+MODEL_NAME = "Qwen/Qwen2.5-1.5B-Instruct"
 TRAJECTORY_PATH = "checkpoints/sft_trajectories.jsonl"
 OUTPUT_DIR = "models/local_policy"
 
@@ -75,11 +75,10 @@ print(f"Tokenized dataset ready: {len(tokenized_dataset)} samples.")
 # 3. Load Model
 print("Loading model to CPU...")
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME, 
-    dtype=torch.float32, 
+    MODEL_NAME,
+    torch_dtype=torch.float32, # type: ignore
     device_map="cpu"
 )
-
 # 4. Train
 print("Starting CPU Training (Lighter on RAM)...")
 training_args = TrainingArguments(

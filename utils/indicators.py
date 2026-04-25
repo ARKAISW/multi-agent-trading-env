@@ -4,9 +4,10 @@ Technical indicators computation for OHLCV data.
 
 import numpy as np
 import pandas as pd
+from typing import Any
 
 
-def compute_rsi(close: pd.Series, period: int = 14) -> pd.Series:
+def compute_rsi(close: Any, period: int = 14) -> Any:
     """Compute Relative Strength Index."""
     delta = close.diff()
     gain = delta.where(delta > 0, 0.0)
@@ -18,12 +19,12 @@ def compute_rsi(close: pd.Series, period: int = 14) -> pd.Series:
     return rsi
 
 
-def compute_ema(close: pd.Series, period: int = 20) -> pd.Series:
+def compute_ema(close: Any, period: int = 20) -> Any:
     """Compute Exponential Moving Average."""
     return close.ewm(span=period, adjust=False).mean()
 
 
-def compute_macd(close: pd.Series, fast: int = 12, slow: int = 26,
+def compute_macd(close: Any, fast: int = 12, slow: int = 26,
                  signal: int = 9) -> tuple:
     """Compute MACD, Signal, and Histogram."""
     ema_fast = close.ewm(span=fast, adjust=False).mean()
@@ -34,7 +35,7 @@ def compute_macd(close: pd.Series, fast: int = 12, slow: int = 26,
     return macd_line, signal_line, histogram
 
 
-def compute_bollinger_bands(close: pd.Series, period: int = 20,
+def compute_bollinger_bands(close: Any, period: int = 20,
                             std_dev: float = 2.0) -> tuple:
     """Compute Bollinger Bands (upper, middle, lower)."""
     middle = close.rolling(window=period).mean()
@@ -44,13 +45,13 @@ def compute_bollinger_bands(close: pd.Series, period: int = 20,
     return upper, middle, lower
 
 
-def compute_volatility(close: pd.Series, period: int = 20) -> pd.Series:
+def compute_volatility(close: Any, period: int = 20) -> Any:
     """Compute rolling volatility (std of returns)."""
     returns = close.pct_change()
     return returns.rolling(window=period).std()
 
 
-def compute_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+def compute_atr(df: Any, period: int = 14) -> Any:
     """Compute Average True Range (ATR)."""
     high = df["high"]
     low = df["low"]
@@ -65,7 +66,7 @@ def compute_atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return atr
 
 
-def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
+def compute_indicators(df: Any) -> Any:
     """
     Compute all technical indicators and attach to the dataframe.
     Expects columns: open, high, low, close, volume.

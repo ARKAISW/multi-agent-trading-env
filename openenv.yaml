@@ -1,7 +1,7 @@
 # OpenEnv Manifesto
 version: "1.0"
-name: "MATE (Multi-Agent Trading Environment)"
-description: "A high-fidelity multi-agent RL environment for quantitative trading strategy discovery."
+name: "QuantHive"
+description: "Multi-agent trading simulation strictly enforcing institutional compliance through collaborative reinforcement."
 author: "Arka Sarkar"
 
 # Environment Specification
@@ -9,7 +9,7 @@ environment:
   entry_point: "env.trading_env:TradingEnv"
   type: "gymnasium"
   observation_space:
-    shape: [23]
+    shape: [24]
     dtype: "float32"
     description: "Market indicators, portfolio exposure, and risk metrics."
   action_space:
@@ -26,6 +26,7 @@ server:
   endpoints:
     reset: "/openenv/reset"
     step: "/openenv/step"
+    state: "/api/state"
 
 # Metadata for Judges
 tags:

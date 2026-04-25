@@ -52,10 +52,10 @@ def main():
     args = parse_args()
 
     if args.demo:
-        print("Starting Demo API Server on port 8000...")
+        print("Starting Demo API Server on port 7860...")
         import uvicorn
         from api.server import app
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        uvicorn.run(app, host="0.0.0.0", port=7860)
         return
 
     config = TrainingConfig(

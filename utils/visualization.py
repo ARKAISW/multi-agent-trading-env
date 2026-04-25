@@ -90,7 +90,7 @@ def plot_reward_curve(
     # Baseline
     if baseline_metrics:
         bl_rewards = [m["total_reward"] for m in baseline_metrics]
-        bl_mean = np.mean(bl_rewards)
+        bl_mean = float(np.mean(bl_rewards))
         ax.axhline(y=bl_mean, color="#FF5722", linestyle="--", linewidth=2,
                     label=f"Random Baseline (avg={bl_mean:.3f})")
 
@@ -127,7 +127,7 @@ def plot_grade_progression(
 
     if baseline_metrics:
         bl_grades = [m["final_grade"] for m in baseline_metrics]
-        bl_mean = np.mean(bl_grades)
+        bl_mean = float(np.mean(bl_grades))
         ax.axhline(y=bl_mean, color="#FF5722", linestyle="--", linewidth=2,
                     label=f"Random Baseline (avg={bl_mean:.3f})")
 

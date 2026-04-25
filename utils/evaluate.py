@@ -3,7 +3,8 @@ Evaluation utilities for comparing trained vs random agents.
 """
 
 import numpy as np
-from typing import List, Dict
+import pandas as pd
+from typing import List, Dict, Optional
 
 from training.config import TrainingConfig
 from training.train import train, run_random_baseline
@@ -15,10 +16,10 @@ from utils.visualization import (
 
 
 def evaluate(
-    config: TrainingConfig = None,
-    trained_metrics: List[Dict] = None,
+    config: Optional[TrainingConfig] = None,
+    trained_metrics: Optional[List[Dict]] = None,
     baseline_episodes: int = 10,
-    df=None,
+    df: Optional[pd.DataFrame] = None,
 ) -> Dict:
     """
     Run full evaluation: train agent, run random baseline, compare, and plot.
@@ -27,6 +28,7 @@ def evaluate(
         config: Training configuration (uses default if None).
         trained_metrics: Pre-computed training metrics (skips training if provided).
         baseline_episodes: Number of random baseline episodes.
+        df: Optional dataframe for the environment.
 
     Returns:
         Evaluation results dict.

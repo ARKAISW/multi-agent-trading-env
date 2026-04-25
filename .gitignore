@@ -3,9 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 .venv/
-env/
-venv/
-ENV/
 
 # Data & Models
 # Ignore all CSV and JSONL files in data/ except possibly .gitkeep if it exists
@@ -13,7 +10,8 @@ data/*.csv
 data/*.jsonl
 checkpoints/
 models/
-plots/
+*.log
+error.txt
 
 # Agent Prompts (Local Only)
 GEMINI.md
@@ -36,7 +34,6 @@ training/outputs/
 *.pdf
 *.zip
 kaggle_upload/
-policy/
 notebooks/.ipynb_checkpoints/
 
 # Node / JS

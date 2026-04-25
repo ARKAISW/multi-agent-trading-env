@@ -7,7 +7,7 @@
     "executionEnvironments": [
         {
             "root": ".",
-            "pythonVersion": "3.14",
+            "pythonVersion": "3.12",
             "pythonExecutable": "./.venv/Scripts/python.exe"
         }
     ],

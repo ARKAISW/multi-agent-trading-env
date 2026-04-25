@@ -7,7 +7,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 from env.trading_env import TradingEnv
 from agents.researcher import QuantResearcher
@@ -52,7 +52,7 @@ def run_episode(
     trader: QuantTrader,
     portfolio_manager: PortfolioManager,
     judge: LLMJudge,
-    config: TrainingConfig = None,
+    config: Optional[TrainingConfig] = None,
 ) -> tuple[Dict, List[Dict]]:
     """
     Run a single episode of the multi-agent trading loop.
@@ -117,7 +117,7 @@ def run_episode(
         
         # We only call the judge periodically or in 'high-stakes' steps to save API tokens
         judge_reward = 0.5
-        if not config.fast_mode and (step_count % 5 == 0 or direction != 0):
+        if not (config and config.fast_mode) and (step_count % 5 == 0 or direction != 0):
             state_brief = f"Price: {current_price:.2f}, Vol: {obs[12]:.4f}, PnL: {info.get('pnl_pct', 0):.2%}"
             judge_reward = judge.evaluate_step(state_brief, agent_reasoning, action, info)
 
@@ -176,7 +176,7 @@ def run_episode(
 
 def train(
     config: TrainingConfig,
-    df: pd.DataFrame = None,
+    df: Optional[pd.DataFrame] = None,
 ) -> List[Dict]:
     """
     Run the full training loop with LLM Judge integration.
@@ -238,7 +238,7 @@ def train(
 
 def run_random_baseline(
     config: TrainingConfig,
-    df: pd.DataFrame = None,
+    df: Optional[pd.DataFrame] = None,
     num_episodes: int = 10,
 ) -> List[Dict]:
     """
@@ -260,9 +260,10 @@ def run_random_baseline(
         total_reward = 0.0
 
         while not done:
+            action_space: Any = env.action_space
             action = {
-                "direction": env.action_space["direction"].sample(),
-                "size": env.action_space["size"].sample(),
+                "direction": action_space["direction"].sample(),
+                "size": action_space["size"].sample(),
                 "sl": np.array([0.0], dtype=np.float32),
                 "tp": np.array([0.0], dtype=np.float32),
             }

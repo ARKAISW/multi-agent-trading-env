@@ -95,7 +95,7 @@ class SimulationRunner:
         self.done = False
 
         sim_state["engine"] = {
-            "name": "SmolLM Trading Desk",
+            "name": "Qwen2.5 Trading Desk",
             "mode": "Local SLM Live" if self.trader.policy.is_active else "Rule Fallback",
             "policy_active": self.trader.policy.is_active,
             "note": (
@@ -336,7 +336,7 @@ else:
 
 
 def run_server():
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=7860)
 
 
 if __name__ == "__main__":

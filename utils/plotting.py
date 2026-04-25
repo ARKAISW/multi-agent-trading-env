@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import os
 
-def plot_training_results(reward_history, loss_history, output_dir="docs/plots"):
+def plot_training_results(reward_history, loss_history, output_dir="plots"):
     """
     Generate professional, readable plots for the training run.
     """
@@ -35,7 +35,7 @@ def plot_training_results(reward_history, loss_history, output_dir="docs/plots")
     
     print(f"Plots saved to {output_dir}")
 
-def plot_baseline_comparison(trained_grades, random_grades, output_dir="docs/plots"):
+def plot_baseline_comparison(trained_grades, random_grades, output_dir="plots"):
     """
     Compare the trained agent vs a random baseline.
     """

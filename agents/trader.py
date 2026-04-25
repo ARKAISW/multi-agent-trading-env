@@ -36,6 +36,8 @@ class QuantTrader:
         signal, confidence, researcher_reasoning = researcher_data
         fa_sentiment, fa_reasoning = fa_data
         position_limit, constraints, risk_reasoning = risk_data
+        current_exposure = float(observation[15]) if len(observation) > 15 else 0.0
+        short_exposure = float(observation[18]) if len(observation) > 18 else 0.0
         
         raw_price = constraints.get("raw_price")
         sl_ratio = constraints.get("suggested_sl_ratio", 0.02)
@@ -64,27 +66,53 @@ class QuantTrader:
         # --- Delegate to policy (Fine-tuned model will use text_context) ---
         direction, size = self.policy.predict(observation, signals)
         
-        # Apply professional risk rules
+        # ═══════════════════════════════════════════════════
+        # STRICT 1% RISK RULE + FIXED 2:1 RRR
+        # ═══════════════════════════════════════════════════
+        # Max loss per trade = 1% of current portfolio value.
+        # RRR is fixed at 2:1 (TP distance = 2 × SL distance).
         sl = 0.0
         tp = 0.0
-        reasoning = f"Trader executing {['HOLD', 'BUY', 'SELL'][direction]} based on signals. Risk check: {risk_reasoning}."
+        RISK_PER_TRADE = 0.01    # 1% of portfolio
+        REWARD_RISK_RATIO = 2.0  # Fixed 2:1 RRR
+        reasoning = f"Trader executing {['HOLD', 'BUY', 'SELL/SHORT'][direction]} based on signals. Risk check: {risk_reasoning}."
 
-        if raw_price is not None:
-            rrr = 2.0 if confidence > 0.7 else 1.5
-            if direction == 1:  # BUY
-                size = min(size, position_limit)
-                sl = raw_price * (1.0 - sl_ratio)
-                risk_dist = raw_price - sl
-                tp = raw_price + (risk_dist * rrr)
-            elif direction == 2:  # SELL (for longs, this closes; for shorts, it opens)
-                # Note: Currently env is long-only, but logic should be robust
-                sl = raw_price * (1.0 + sl_ratio)
-                risk_dist = sl - raw_price
-                tp = raw_price - (risk_dist * rrr)
+        if raw_price is not None and raw_price > 0 and direction != 0:
+            # SL distance from ATR-based ratio (from risk model)
+            sl_distance = raw_price * sl_ratio  # e.g. 2% of price
+
+            if direction == 1:  # BUY / Cover short
+                sl = raw_price - sl_distance
+                tp = raw_price + (sl_distance * REWARD_RISK_RATIO)
+            elif direction == 2:  # SELL long / Open short
+                sl = raw_price + sl_distance
+                tp = raw_price - (sl_distance * REWARD_RISK_RATIO)
+
+            # ── 1% Risk Position Sizing ──
+            # If SL is hit, loss = qty × sl_distance
+            # We want: qty × sl_distance ≤ portfolio_value × 0.01
+            # So: qty ≤ (portfolio_value × 0.01) / sl_distance
+            # And: size = qty × price / portfolio_value
+            # → size ≤ (0.01 × price) / (sl_distance × (1 + commission))
+            # Simplified: size = RISK_PER_TRADE / (sl_ratio × (1 + 0.001))
+            max_risk_size = RISK_PER_TRADE / (sl_ratio + 1e-10)
+
+            # ── Volatility-Adjusted Target Sizing ──
+            # Target a constant volatility layout. If market vol is 2x normal, halve position.
+            current_volatility = float(observation[12]) if len(observation) > 12 else 0.015
+            vol_target = 0.015  # Benchmark normal volatility
+            vol_scalar = np.clip(vol_target / max(current_volatility, 1e-4), 0.2, 1.5)
+            
+            size = min(size * vol_scalar, max_risk_size, position_limit)
+
+            reasoning = (
+                f"Trader executing {['HOLD', 'BUY', 'SELL/SHORT'][direction]} | "
+                f"Vol Adjusted (x{vol_scalar:.2f}), Size: {size:.1%} of portfolio | "
+                f"SL: {sl:.2f}, TP: {tp:.2f} (2:1 RRR) | "
+                f"{risk_reasoning}"
+            )
         else:
-            # Fallback if raw_price is missing: use ratios (0.98, 1.05) 
-            # environment will need to handle this or it might break SL/TP logic
-            pass
+            size = min(size, position_limit)
             
         size = float(np.clip(size, 0.0, 1.0))
         return direction, size, sl, tp, reasoning

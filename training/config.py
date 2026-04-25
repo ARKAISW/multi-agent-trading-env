@@ -29,6 +29,8 @@ class TrainingConfig:
         "volatility": 0.2,
         "sharpe": 0.5,
         "overtrading": 0.05,
+        "hold_penalty": 0.01,            # Small cost for inaction
+        "directional_bonus": 0.3,        # Reward matching market trend
     })
 
     # ─── Training Loop ───
