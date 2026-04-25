@@ -103,7 +103,7 @@ class SimulationRunner:
     """
 
     def __init__(self):
-        self.config = TrainingConfig(tickers=["AAPL"], fast_mode=False, max_steps=100)
+        self.config = TrainingConfig(tickers=["AAPL"], fast_mode=True, max_steps=100)
 
         # ── PettingZoo multi-agent environment ──────────────────────────────
         self.env = MultiAgentTradingEnv(

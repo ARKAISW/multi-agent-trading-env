@@ -175,13 +175,12 @@ export const OfficeScene = ({ agents, flow, trade, currentStep, isRunning, engin
   const tradeTone =
     trade?.side === 'BUY' ? 'text-emerald-600' : trade?.side === 'SELL' ? 'text-rose-600' : 'text-stone-500';
 
-  return (
-    <div className="relative w-full aspect-[1200/620] overflow-hidden rounded-[2.4rem] border border-[#7d5a4f]/20 shadow-[0_34px_90px_rgba(82,49,31,0.18)]">
+    <div className="relative min-h-[680px] w-full overflow-hidden rounded-[2.4rem] border border-[#7d5a4f]/20 shadow-[0_34px_90px_rgba(82,49,31,0.18)] bg-[#d2a382]">
       {/* pixel-art background */}
       <img
         src={officeBg}
         alt="Quant Office"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full"
         style={{ imageRendering: 'pixelated' }}
       />
 
@@ -220,7 +219,7 @@ export const OfficeScene = ({ agents, flow, trade, currentStep, isRunning, engin
       </div>
 
       {/* data-link SVG layer */}
-      <svg viewBox="0 0 1200 620" className="pointer-events-none absolute inset-0 z-[5] h-full w-full">
+      <svg viewBox="0 0 1200 620" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 z-[5] h-full w-full">
         {flow?.map((item) => (
           <DataLink key={`${item.from}-${item.to}-${item.tone}`} flow={item} isRunning={isRunning} />
         ))}
