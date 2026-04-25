@@ -1,0 +1,74 @@
+{
+  "random": {
+    "label": "random",
+    "episodes": 5,
+    "total_reward": {
+      "mean": -3.3389,
+      "std": 3.1735
+    },
+    "final_grade": {
+      "mean": 0.489,
+      "std": 0.1673
+    },
+    "final_pnl_pct": {
+      "mean": -0.1939,
+      "std": 0.3764
+    },
+    "max_drawdown": {
+      "mean": 0.1984,
+      "std": 0.3741
+    },
+    "sharpe": {
+      "mean": -0.2549,
+      "std": 0.2854
+    },
+    "trade_count": {
+      "mean": 23.0,
+      "std": 3.2863
+    },
+    "compliance_rate": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "total_interventions": {
+      "mean": 53.0,
+      "std": 9.0554
+    }
+  },
+  "governance_aware": {
+    "label": "governance_aware",
+    "episodes": 5,
+    "total_reward": {
+      "mean": -3.4189,
+      "std": 5.2065
+    },
+    "final_grade": {
+      "mean": 0.5524,
+      "std": 0.0757
+    },
+    "final_pnl_pct": {
+      "mean": -0.0955,
+      "std": 0.1193
+    },
+    "max_drawdown": {
+      "mean": 0.0976,
+      "std": 0.1181
+    },
+    "sharpe": {
+      "mean": -0.0327,
+      "std": 0.2585
+    },
+    "trade_count": {
+      "mean": 11.0,
+      "std": 1.4142
+    },
+    "compliance_rate": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "total_interventions": {
+      "mean": 22.0,
+      "std": 2.8284
+    }
+  }
+}

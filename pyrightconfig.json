@@ -1,0 +1,15 @@
+{
+    "venvPath": ".",
+    "venv": ".venv",
+    "include": [
+        "."
+    ],
+    "executionEnvironments": [
+        {
+            "root": ".",
+            "pythonVersion": "3.12",
+            "pythonExecutable": "./.venv/Scripts/python.exe"
+        }
+    ],
+    "typeCheckingMode": "basic"
+}

@@ -1,0 +1,49 @@
+# OpenEnv Manifesto
+version: "1.0"
+name: "QuantHive"
+description: "Decentralized multi-agent trading governance — three independent RL agents (Risk Manager, Portfolio Manager, Trader) with adversarial rewards negotiate via PettingZoo AEC turns."
+author: "Arka Sarkar"
+
+# Environment Specification
+environment:
+  entry_point: "env.multi_agent_env:MultiAgentTradingEnv"
+  type: "pettingzoo_aec"
+  agents:
+    - risk_manager_0
+    - portfolio_manager_0
+    - trader_0
+  observation_space:
+    risk_manager_0: { shape: [24], dtype: "float32", description: "Market + portfolio + risk state" }
+    portfolio_manager_0: { shape: [27], dtype: "float32", description: "Base obs + RM constraints [size_limit, allow_new, force_reduce]" }
+    trader_0: { shape: [29], dtype: "float32", description: "Base obs + RM constraints + PM allocation [cap_alloc, override_strength]" }
+  action_space:
+    risk_manager_0:
+      type: "box"
+      shape: [3]
+      description: "[size_limit (0-1), allow_new_positions (0-1), force_reduce (0-1)]"
+    portfolio_manager_0:
+      type: "box"
+      shape: [2]
+      description: "[capital_allocation (0-1), override_strength (0-1)]"
+    trader_0:
+      type: "dict"
+      items:
+        direction: { type: "int", low: 0, high: 2, description: "0=Hold, 1=Buy, 2=Sell" }
+        size: { type: "float", low: 0.0, high: 1.0 }
+        sl: { type: "float", description: "Stop Loss price" }
+        tp: { type: "float", description: "Take Profit price" }
+
+server:
+  port: 7860
+  endpoints:
+    reset: "/reset"
+    step: "/step"
+    state: "/state"
+
+tags:
+  - "PettingZoo AEC"
+  - "Multi-Agent"
+  - "Adversarial Rewards"
+  - "Financial Governance"
+  - "Inter-Agent Negotiation"
+  - "Self-Regulation"
