@@ -30,7 +30,7 @@ QuantHive is a PettingZoo AEC (Agent-Environment Cycle) environment where **thre
 | 📓 **Training Notebook** | [mate_training.ipynb](./mate_training.ipynb) — re-runnable locally |
 | ☁️ **Colab Link** | [Open in Google Colab](https://colab.research.google.com/drive/1B-KIlGL9kHLMD1RLhgLV94-modKzPzfy?usp=sharing) |
 | 🚀 **Kaggle Link** | [Open in Kaggle](https://www.kaggle.com/code/arka2930/notebook24ed9f9bff) |
-| ✍️ **Hugging Face Writeup** | [Read the Mini-Blog on Hugging Face](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/WRITEUP.md) *(Note: Please post the contents of WRITEUP.md as a discussion or blog post on HF if not already done!)* |
+| ✍️ **Hugging Face Blog** | [Read the Mini-Blog on HF Spaces](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/blog.md) |
 
 ---
 
