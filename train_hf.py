@@ -140,7 +140,12 @@ def main():
     model = get_peft_model(model, peft_config)
     
     # 🐛 Fix precision mismatch (Half vs Float) in generate()
-    model.to(torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16)
+    compute_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    model.to(compute_dtype)
+    if hasattr(model, "lm_head"):
+        model.lm_head.to(compute_dtype)
+    if hasattr(model, "model") and hasattr(model.model, "embed_tokens"):
+        model.model.embed_tokens.to(compute_dtype)
 
     # 🐛 Fix GRPOTrainer crash by injecting warnings_issued dict
     if not hasattr(model, "warnings_issued"):
