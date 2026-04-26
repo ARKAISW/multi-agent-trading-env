@@ -29,9 +29,8 @@ QuantHive is a PettingZoo AEC (Agent-Environment Cycle) environment where **thre
 | 🚀 Live Space | [Hugging Face Space](https://huggingface.co/spaces/ARKAISW/QuantHive) |
 | 🧠 Trained Model | [QuantHive GRPO Trader](https://huggingface.co/ARKAISW/QuantHive-GRPO-Trader) |
 | 📓 Kaggle Run | [Kaggle Notebook](https://www.kaggle.com/code/arka2930/notebook24ed9f9bff) |
-| 📝 Submission Blog | [QuantHive: Multi-Agent Governance](https://github.com/ARKAISW/multi-agent-trading-env/blob/master/blog.md) |
+| 📝 **Submission Blog** | [QuantHive: Multi-Agent Governance (HF)](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/blog.md) |
 | 🐍 Setup Script | [QuantHive Training Script](https://github.com/ARKAISW/multi-agent-trading-env/blob/master/train_hf.py) |
-| ✍️ **Hugging Face Blog** | [Read the Mini-Blog on HF Spaces](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/blog.md) |
 
 ---
 
