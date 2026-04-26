@@ -187,7 +187,7 @@ def main():
         save_steps=SAVE_STEPS,
         logging_steps=LOGGING_STEPS,
         bf16=False,
-        fp16=True,
+        fp16=False,
         max_prompt_length=MAX_PROMPT_LENGTH,
         max_completion_length=MAX_COMPLETION_LENGTH,
         num_generations=NUM_GENERATIONS,
