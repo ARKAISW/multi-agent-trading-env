@@ -51,19 +51,19 @@ Traditional RL trading environments optimize a single agent for PnL. "Governance
 
 QuantHive decomposes trading governance into **three independent RL agents** that take turns each market step via PettingZoo's AEC (Agent-Environment Cycle):
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    One Market Cycle                          │
-│                                                              │
-│  ① Risk Manager ──▶ ② Portfolio Manager ──▶ ③ Trader        │
-│    obs: 24 dims       obs: 27 dims           obs: 29 dims   │
-│    act: Box(3)        act: Box(2)            act: Dict(4)   │
-│                                                              │
-│  RM message ──────────▶ PM obs                               │
-│  RM + PM messages ────────────────────────▶ Trader obs       │
-│                                                              │
-│  After Trader acts: market advances one candle               │
-└─────────────────────────────────────────────────────────────┘
+```text
++-------------------------------------------------------------------------+
+|                            One Market Cycle                             |
+|                                                                         |
+| [1] Risk Manager -------> [2] Portfolio Manager -------> [3] Trader     |
+|     obs: 24 dims              obs: 27 dims              obs: 29 dims    |
+|     act: Box(3)               act: Box(2)               act: Dict(4)    |
+|                                                                         |
+| RM message -------------------> PM obs                                  |
+| RM + PM messages -------------------------------------> Trader obs      |
+|                                                                         |
+| After Trader acts: market advances one candle                           |
++-------------------------------------------------------------------------+
 ```
 
 | Agent | Observation | Action | Reward Strategy |
