@@ -121,14 +121,14 @@ def main():
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
         bnb_4bit_use_double_quant=True,
-        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_compute_dtype=torch.float16,
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         quantization_config=bnb_config,
         device_map="auto",
-        dtype=torch.bfloat16,
+        dtype=torch.float16,
         trust_remote_code=True,
     )
 
@@ -141,13 +141,17 @@ def main():
     )
     model = get_peft_model(model, peft_config)
     
-    # 🚀 Fix precision mismatch (Half vs Float) in generate() — BFloat16 is safer for A10G
-    compute_dtype = torch.bfloat16
-    model.to(compute_dtype)
+    # 🚀 Surgical DType Lock (Hard Force FP16 after PEFT wrap)
+    model = model.to(torch.float16)
     if hasattr(model, "lm_head"):
-        model.lm_head.to(compute_dtype)
+        model.lm_head.weight.data = model.lm_head.weight.data.to(torch.float16)
+        if getattr(model.lm_head, "bias", None) is not None:
+            model.lm_head.bias.data = model.lm_head.bias.data.to(torch.float16)
+        model.lm_head.to(torch.float16)
+        
     if hasattr(model, "model") and hasattr(model.model, "embed_tokens"):
-        model.model.embed_tokens.to(compute_dtype)
+        model.model.embed_tokens.weight.data = model.model.embed_tokens.weight.data.to(torch.float16)
+        model.model.embed_tokens.to(torch.float16)
 
     # 🐛 Fix GRPOTrainer crash by injecting warnings_issued dict
     if not hasattr(model, "warnings_issued"):
@@ -187,7 +191,7 @@ def main():
         max_steps=MAX_STEPS,
         save_steps=SAVE_STEPS,
         logging_steps=LOGGING_STEPS,
-        bf16=True,
+        bf16=False,
         fp16=False,
         max_grad_norm=0.5,
         max_prompt_length=MAX_PROMPT_LENGTH,
@@ -216,6 +220,9 @@ def main():
     elif "tokenizer" in sig.parameters:
         trainer_kwargs["tokenizer"] = tokenizer
 
+    # ── Step 5.5: Verify DTypes before Trainer ───────────────────────────────
+    print(f"📊 DType Check: lm_head={model.lm_head.weight.dtype}, embed={model.model.embed_tokens.weight.dtype}")
+    
     trainer = GRPOTrainer(**trainer_kwargs)
 
     # ── Step 6: Train! ────────────────────────────────────────────────────────
