@@ -138,6 +138,11 @@ def main():
         bias="none",
     )
     model = get_peft_model(model, peft_config)
+    
+    # 🐛 Fix GRPOTrainer crash by injecting warnings_issued dict
+    if not hasattr(model, "warnings_issued"):
+        model.warnings_issued = {}
+        
     print("   Native model loaded + LoRA applied.")
 
     # ── Step 5: Build trainer ─────────────────────────────────────────────────
