@@ -139,6 +139,9 @@ def main():
     )
     model = get_peft_model(model, peft_config)
     
+    # 🐛 Fix precision mismatch (Half vs Float) in generate()
+    model.to(torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16)
+
     # 🐛 Fix GRPOTrainer crash by injecting warnings_issued dict
     if not hasattr(model, "warnings_issued"):
         model.warnings_issued = {}
