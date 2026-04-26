@@ -31,35 +31,39 @@ Could we train an AI not just to chase profits, but to negotiate, comply, and ad
 
 ### Entering the QuantHive
 
-To solve this, I built **QuantHive**—a multi-agent environment powered by PettingZoo's AEC (Agent-Environment Cycle). Instead of one reckless AI, I broke institutional trading down into three adversarial roles:
+To solve this, I built **QuantHive**—a governance-first trading environment with a multi-agent extension built around PettingZoo’s AEC model. Instead of one reckless AI, I broke institutional trading down into three adversarial roles:
 
 1. **The Trader:** Wants to maximize profit and find alpha.
 2. **The Portfolio Manager:** Controls capital allocation and wants steady growth without massive drawdowns.
 3. **The Risk Manager:** Has the power to restrict position sizes and forcefully reduce exposure if things get dangerous.
 
-They negotiate via observation message-passing. The environment rewards survival, not recklessness. The Risk Manager is actively rewarded for restricting trades during dangerous drawdowns, while the Trader has to figure out how to make money within the dynamically changing limits imposed by the others.
+They interact through structured message passing and governance constraints inside the environment loop. The environment rewards survival, not recklessness. The Risk Manager is actively rewarded for restricting trades during dangerous drawdowns, while the Trader has to figure out how to make money within the dynamically changing limits imposed by the others.
 
 ### From Floats to Thoughts: Semantic Reasoning
 
-The breakthrough came when training the Qwen 2.5 1.5B model using GRPO (Group Relative Policy Optimization). 
+The most useful shift came when training the Qwen 2.5 1.5B model using GRPO (Group Relative Policy Optimization). 
 
 Initially, the agents were fed raw float arrays (e.g., `0.284`). But to truly achieve "Auditable AI," I transitioned the environment to use **Semantic Reasoning**. Instead of a vector of 24 numbers, the AI "reads" the market state in human terms: *"RSI is 28.4 (oversold)"*.
 
-This seemingly simple change leveraged the LLM's pre-trained world knowledge. We trained the model against 5 reward verifiers, enforcing not just profit, but *Format, Alignment, Risk, and Governance.*
+This seemingly simple change leveraged the LLM's pre-trained world knowledge. I trained the model against 5 reward verifiers, enforcing not just profit, but *Format, Alignment, Risk, and Governance.*
 
 ### The Smoking Gun 
 
-After 250 steps of GRPO training, the results were staggering. The Trader learned to fear the Risk Manager's interventions and began pre-emptively complying. 
+After 250 steps of GRPO training, the most interesting result was how the Trader adapted. The trader began anticipating intervention and adjusted before being forced to. 
 
-Governance compliance shot from a random 7% up to **88%**, and Risk Limit Adherence hit **93%**. 
+Governance compliance shot from a random 7% up to **88%**, and Risk Limit Adherence hit **93%** across held-out evaluation episodes in the governed environment. 
 
-But the best part is *how* it compliance. Because we required Chain-of-Thought reasoning, the trained agent now outputs things like:
+But the best part is *how* it complies. Because I required the model to justify its actions in natural language, the trained agent now outputs things like:
 
 > *"...I also see that the portfolio's allocation of capital is nearing its limit (0.5). Given the Risk Manager's constraint on the size limit, I need to be cautious..."*
 
 It doesn’t just follow the rules; it understands and explicitly cites them before taking action. 
 
-I set out to see if AI could be taught institutional discipline. It turns out, when you build the right environment, it absolutely can.
+### The Broader Implication
+
+Finance is just a high-pressure test case. The broader question is whether autonomous systems can learn to operate under institutional oversight, justify their actions, and adapt to governance without collapsing performance.
+
+I set out to see if AI could be taught institutional discipline. The interesting result was not that the model became more profitable first. It became more disciplined first.
 
 ---
-*Check out the full project on GitHub and see the live multi-agent choregraphy on our Hugging Face Space! All links are available in the repository `README.md`.*
+*Check out the full project on GitHub and see the live multi-agent choregraphy on our Hugging Face Space! All links are available in the repository [README.md](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/README.md).*
