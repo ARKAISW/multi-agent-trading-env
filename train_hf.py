@@ -120,14 +120,16 @@ def main():
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_compute_dtype=torch.float16,
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
         quantization_config=bnb_config,
         device_map="auto",
-        torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+        dtype=torch.float16,
+        trust_remote_code=True,
     )
 
     peft_config = LoraConfig(
@@ -139,13 +141,12 @@ def main():
     )
     model = get_peft_model(model, peft_config)
     
-    # 🐛 Fix precision mismatch (Half vs Float) in generate()
-    compute_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-    model.to(compute_dtype)
+    # 🐛 Fix precision mismatch (Half vs Float) in generate() — Force Float16
+    model.to(torch.float16)
     if hasattr(model, "lm_head"):
-        model.lm_head.to(compute_dtype)
+        model.lm_head.to(torch.float16)
     if hasattr(model, "model") and hasattr(model.model, "embed_tokens"):
-        model.model.embed_tokens.to(compute_dtype)
+        model.model.embed_tokens.to(torch.float16)
 
     # 🐛 Fix GRPOTrainer crash by injecting warnings_issued dict
     if not hasattr(model, "warnings_issued"):
@@ -185,8 +186,8 @@ def main():
         max_steps=MAX_STEPS,
         save_steps=SAVE_STEPS,
         logging_steps=LOGGING_STEPS,
-        bf16=torch.cuda.is_bf16_supported(),
-        fp16=not torch.cuda.is_bf16_supported(),
+        bf16=False,
+        fp16=True,
         max_prompt_length=MAX_PROMPT_LENGTH,
         max_completion_length=MAX_COMPLETION_LENGTH,
         num_generations=NUM_GENERATIONS,
