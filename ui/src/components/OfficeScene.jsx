@@ -37,13 +37,13 @@ const AGENT_THEMES = {
   },
 };
 
-/* Desk positions (% of scene) — tuned to sit on the pixel-art desks */
+/* Stacks cards neatly on the left while lines connect to the pixel-art desks */
 const STATIONS = {
-  Researcher:           { left: '4%',  top: '25%',  anchor: [100, 140] },
-  'Risk Manager':       { left: '26%', top: '22%',  anchor: [420, 120] },
-  'Portfolio Manager':  { left: '55%', top: '25%',  anchor: [730, 140] },
-  'Fundamental Analyst':{ left: '10%', top: '56%', anchor: [230, 430] },
-  Trader:               { left: '48%', top: '56%', anchor: [700, 430] },
+  Researcher:           { left: '2%',  top: '12%',  anchor: [100, 140] },
+  'Fundamental Analyst':{ left: '2%',  top: '28%',  anchor: [230, 430] },
+  'Risk Manager':       { left: '2%',  top: '44%',  anchor: [420, 120] },
+  'Portfolio Manager':  { left: '2%',  top: '60%',  anchor: [730, 140] },
+  Trader:               { left: '2%',  top: '76%',  anchor: [700, 430] },
 };
 
 const MARKET_ANCHOR = [950, 280];

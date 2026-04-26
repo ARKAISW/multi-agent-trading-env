@@ -338,7 +338,7 @@ async def simulation_loop():
 
     while sim_state["is_running"]:
         runner.step()
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(0.4)
 
 
 @app.get("/state")
