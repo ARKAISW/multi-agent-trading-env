@@ -142,6 +142,15 @@ def main():
 
     # ── Step 5: Build trainer ─────────────────────────────────────────────────
     from trl.trainer.grpo_config import GRPOConfig
+    
+    # 🐛 Fix llm_blender crashing on modern transformers by injecting missing cache var
+    import transformers.utils.hub
+    if not hasattr(transformers.utils.hub, "TRANSFORMERS_CACHE"):
+        try:
+            transformers.utils.hub.TRANSFORMERS_CACHE = transformers.utils.hub.constants.HF_HUB_CACHE
+        except AttributeError:
+            transformers.utils.hub.TRANSFORMERS_CACHE = "/tmp"
+
     from trl.trainer.grpo_trainer import GRPOTrainer
 
     from env.reward import (
