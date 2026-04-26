@@ -8,7 +8,6 @@ yfinance
 ccxt
 torch
 transformers
-unsloth
 accelerate
 safetensors
 jinja2

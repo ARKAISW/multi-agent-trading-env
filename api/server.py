@@ -10,6 +10,7 @@ to enrich the UI with signal context but do NOT participate in the AEC loop.
 
 from pathlib import Path
 import asyncio
+import os
 
 import numpy as np
 import uvicorn
@@ -33,11 +34,6 @@ from training.train_multi_agent import (
     RuleRiskManagerPolicy,
     RuleTraderPolicy,
 )
-try:
-    from unsloth import FastLanguageModel
-    HAS_UNSLOTH = True
-except ImportError:
-    HAS_UNSLOTH = False
 
 
 from huggingface_hub import snapshot_download
@@ -45,19 +41,30 @@ from huggingface_hub import snapshot_download
 
 class GRPOAgent:
     """Bridges the trained GRPO model to the UI demo."""
-    def __init__(self, model_id="ARKAISW/quanthive-trader-grpo-lora"):
-        self.model_id = model_id
+    def __init__(self, model_id=None):
+        self.model_id = model_id or os.getenv("GRPO_MODEL_ID", "ARKAISW/QuantHive-GRPO-Trader")
         self.model = None
         self.tokenizer = None
         self.is_ready = False
         
     def load(self):
-        if not HAS_UNSLOTH:
-            print("Unsloth not installed. Falling back to rule-based.")
-            return False
         try:
             import torch
-            from transformers import AutoTokenizer
+        except Exception as e:
+            print(f"PyTorch unavailable ({e}). Falling back to rule-based.")
+            return False
+
+        if not torch.cuda.is_available():
+            print("CUDA not available in this environment. Falling back to rule-based.")
+            return False
+
+        try:
+            from unsloth import FastLanguageModel
+        except Exception as e:
+            print(f"Could not import Unsloth: {e}. Falling back to rule-based.")
+            return False
+
+        try:
             print(f"Attempting to sync GRPO model from {self.model_id}...")
             # Auto-download from HF Hub if not local
             local_dir = Path("models") / "grpo_hf_trained"
@@ -87,7 +94,8 @@ class GRPOAgent:
             import torch
             # Construct a prompt that looks like the training scenarios
             prompt = f"Observation: {obs[:5].tolist()}... (truncated)\nResponse:"
-            inputs = self.tokenizer([prompt], return_tensors="pt").to("cuda")
+            device = getattr(self.model, "device", "cuda")
+            inputs = self.tokenizer([prompt], return_tensors="pt").to(device)
             
             # Fast generation for demo smoothness
             with torch.no_grad():
