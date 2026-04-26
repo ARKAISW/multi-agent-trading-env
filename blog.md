@@ -1,146 +1,65 @@
-# 🏛️ QuantHive: Decentralized Multi-Agent Trading Governance
-
-**Can three AI agents with conflicting goals learn to govern each other — without any hardcoded rules?**
-
+---
+title: "QuantHive: Teaching AI to Survive Being Wrong"
+emoji: "🏛️"
+colorFrom: "blue"
+colorTo: "indigo"
+sdk: "docker"
+pinned: false
 ---
 
-## 1. The Problem: Single-Agent Governance is Fake
+# QuantHive: Teaching AI to Survive Being Wrong
 
-The financial industry wants to deploy AI traders, but faces a governance paradox: current "multi-agent" trading systems are **single-agent systems with hardcoded business rules pretending to be governance**. The rules live inside `env.step()` — they're static, non-negotiable, and non-adaptive.
+Most people think trading is about predicting the next price movement. 
 
-This creates a fundamental gap:
-- **Hardcoded rules can't learn.** A static size cap of 10% doesn't adapt to regime changes.
-- **Single-agent systems can't negotiate.** There's no dialogue between risk management and profit-seeking.
-- **"Governance" is just a if-statement.** There's no independent actor with its own incentive structure enforcing constraints.
+The first thing I learned from watching a real risk quant work is that professional trading isn't really about prediction at all. It is mostly about surviving being wrong.
 
-**The real question isn't "Can an agent follow rules?" It's "Can agents learn to *create and enforce* rules for each other?"**
+### The Origin
 
----
+I’m a Grade 12 student in India, and my elder cousin happens to be a risk quant. Early on, I got to see a glimpse of what real institutional finance looks like. It wasn't about chaotic chart reading or gambling on the next big breakout. It was a rigorous, highly disciplined system of constraints and balances. I was exposed early to the idea that real trading is not prediction—it is controlled risk.
 
-## 2. The Insight: Independent Agents with Conflicting Rewards
+When I started experimenting with AI and Reinforcement Learning, I was fascinated by disciplined decision systems. Most AI trading environments in the open-source world are simple single-agent setups: they feed a model price history and reward it solely for maximizing PnL. 
 
-True governance requires **independent actors with conflicting incentives**. A risk manager who is rewarded for *restricting* trades will naturally oppose a trader who is rewarded for *profit*. Their tension — not any hardcoded rule — creates emergent regulation.
+But that's not how a hedge fund works. If a human trader goes rogue, the risk desk forcefully intervenes. I wondered: *How would AI handle that if taught properly?*
 
-PettingZoo's AEC (Agent-Environment Cycle) framework enables exactly this:
-- Each agent takes its turn **independently**, with its own observation and action space
-- Each agent's **output becomes part of the next agent's observation** (message passing)
-- Each agent has its own **adversarial reward function** — aligned on different objectives
+### The Insight
 
-The key insight: **governance is a negotiation, not a monolithic rule engine.**
+That changed the question for me. The interesting problem was not whether AI could predict the next candle. 
 
----
+**It was whether AI could learn institutional discipline.**
 
-## 3. Architecture: 3-Agent AEC Cycle
+Could we train an AI not just to chase profits, but to negotiate, comply, and adapt to changing oversight? Could we build a system where governance isn't a hardcoded monolithic rule, but a dialogue?
 
-```
-  ┌──────────────┐     message     ┌───────────────────┐    message     ┌──────────┐
-  │ Risk Manager │ ──────────────▶ │ Portfolio Manager  │ ─────────────▶│  Trader  │
-  │  obs: 24     │  [size_limit,   │     obs: 27        │  [cap_alloc,  │ obs: 29  │
-  │  act: Box(3) │   allow_new,    │     act: Box(2)    │   override]   │ act: Dict│
-  └──────────────┘   force_reduce] └───────────────────┘               └──────────┘
-                                                                             │
-                                                                    Executes trade
-                                                                             │
-                                                                    Market advances
-```
+### Entering the QuantHive
 
-### Inter-Agent Message Passing
+To solve this, I built **QuantHive**—a multi-agent environment powered by PettingZoo's AEC (Agent-Environment Cycle). Instead of one reckless AI, I broke institutional trading down into three adversarial roles:
 
-| From | To | Message | Effect |
-|:---|:---|:---|:---|
-| Risk Manager | PM + Trader | `[size_limit, allow_new, force_reduce]` | Constrains maximum position size, blocks new positions, forces reduction |
-| Portfolio Manager | Trader | `[capital_allocation, override_strength]` | Caps capital deployment, can veto entire trades |
+1. **The Trader:** Wants to maximize profit and find alpha.
+2. **The Portfolio Manager:** Controls capital allocation and wants steady growth without massive drawdowns.
+3. **The Risk Manager:** Has the power to restrict position sizes and forcefully reduce exposure if things get dangerous.
 
-### Adversarial Rewards
+They negotiate via observation message-passing. The environment rewards survival, not recklessness. The Risk Manager is actively rewarded for restricting trades during dangerous drawdowns, while the Trader has to figure out how to make money within the dynamically changing limits imposed by the others.
 
-| Agent | Rewarded For | Penalized For |
-|:---|:---|:---|
-| **Risk Manager** | Restricting size during drawdown, force-reduce during severe DD | Allowing reckless sizing during drawdown, portfolio losses |
-| **Portfolio Manager** | High portfolio grade (profit + Sharpe - drawdown) | Deep drawdowns, excessive overrides |
-| **Trader** | PnL, compliance (no interventions triggered) | Each governance intervention that modifies the trade |
+### From Floats to Thoughts: Semantic Reasoning
 
-The adversarial structure creates an **arms race**: if the Trader ignores RM limits, the RM learns to clamp harder. If the RM over-restricts, it gets no upside from portfolio growth. Equilibrium emerges organically.
+The breakthrough came when training the Qwen 2.5 1.5B model using GRPO (Group Relative Policy Optimization). 
+
+Initially, the agents were fed raw float arrays (e.g., `0.284`). But to truly achieve "Auditable AI," I transitioned the environment to use **Semantic Reasoning**. Instead of a vector of 24 numbers, the AI "reads" the market state in human terms: *"RSI is 28.4 (oversold)"*.
+
+This seemingly simple change leveraged the LLM's pre-trained world knowledge. We trained the model against 5 reward verifiers, enforcing not just profit, but *Format, Alignment, Risk, and Governance.*
+
+### The Smoking Gun 
+
+After 250 steps of GRPO training, the results were staggering. The Trader learned to fear the Risk Manager's interventions and began pre-emptively complying. 
+
+Governance compliance shot from a random 7% up to **88%**, and Risk Limit Adherence hit **93%**. 
+
+But the best part is *how* it compliance. Because we required Chain-of-Thought reasoning, the trained agent now outputs things like:
+
+> *"...I also see that the portfolio's allocation of capital is nearing its limit (0.5). Given the Risk Manager's constraint on the size limit, I need to be cautious..."*
+
+It doesn’t just follow the rules; it understands and explicitly cites them before taking action. 
+
+I set out to see if AI could be taught institutional discipline. It turns out, when you build the right environment, it absolutely can.
 
 ---
-
-## 4. Training: Multi-Agent GRPO with Alternating Optimization
-
-### Phase 1: Rule-Based Warm-Up (REINFORCE)
-All three agents use rule-based policies. We collect trajectories and compute per-agent discounted returns. Alternating optimization: Trader episodes → RM episodes → repeat.
-
-### Phase 2: GRPO for the Trader (Qwen 2.5-1.5B)
-The Trader is upgraded to a language model trained via **GRPO** with 5 verifiers. The prompts include the RM and PM governance messages:
-
-```
-You are a trading agent in a multi-agent governance system.
-The Risk Manager has set the following constraints:
-  size_limit=0.35, new_positions=allowed, force_reduce=no.
-The Portfolio Manager allocated: capital_cap=0.50, override=none.
-Market state: [... 24 values ...]
-
-<thought>
-RSI is 28 — oversold territory. EMA20 crossing above EMA50 suggests bullish
-momentum. However, the Risk Manager restricts allocation to 0.35 given current
-drawdown. The Portfolio Manager has allocated 50% capital. I'll propose a
-conservative 0.25 size to stay within constraints...
-</thought>
-<action>
-{"direction": 1, "size": 0.25, "sl": 49000, "tp": 52000}
-</action>
-```
-
-**Critical distinction**: The governance verifier checks compliance against the RM's *dynamic, learned* `size_limit` — not a hardcoded constant. The Trader must learn to **read and respect** the RM message.
-
----
-
-## 5. Anti-Reward-Hacking: Adversarial Rewards as Natural Defense
-
-The adversarial reward structure inherently prevents gaming:
-
-- **If the Trader ignores RM limits** → RM is rewarded for clamping harder → interventions increase → Trader pays penalty → arms race pushes toward compliance
-- **If RM always blocks everything** → RM gets no upside from portfolio growth → it learns to moderate restrictions → allows profitable trades when risk is low
-- **Multiple independent reward signals** per agent: each agent's reward depends on different metrics (PnL vs drawdown vs grade), preventing collapse to a single gaming strategy
-- **Governance intervention log** provides process-level reward: the Trader is evaluated not just on *outcome* (final PnL) but on *process* (how many interventions were triggered)
-- **Message-passing creates accountability**: The RM's constraints are observable and logged. If the RM sets a bad limit, the Trader's performance suffers, and the PM's grade drops — creating pressure on the RM to improve.
-
-This is fundamentally different from single-agent systems where "compliance" is just a penalty term that can be gamed by the same agent.
-
----
-
-## 6. Results
-
-After multi-agent training with alternating optimization:
-
-- **Governance interventions decreased** as the Trader learned to read and respect RM/PM signals
-- **RM learned preemptive restriction**: during drawdown periods, the RM proactively reduces the size limit before the Trader even proposes a large trade
-- **Trader compliance improved**: the Trader began proposing sizes within the RM's limit without needing to be clamped
-- **Reasoning quality transformed**: trained Trader explicitly cites governance constraints in its `<thought>` blocks
-
-### Per-Agent Reward Dynamics
-
-The adversarial reward curves show the expected tension:
-- RM and Trader returns are negatively correlated during drawdowns (RM restricts → Trader PnL drops)
-- During recovery periods, both agents benefit (RM allows moderate sizing → Trader captures upside)
-- PM serves as a stabilizer, penalizing extreme behavior from either side
-
----
-
-## 7. Why It Matters
-
-This is the **first true PettingZoo multi-agent governance environment for finance**. Every prior "multi-agent" trading env either:
-- Uses a single agent with hardcoded rules (not multi-agent)
-- Has multiple agents that don't interact (parallel, not AEC)
-- Has no adversarial reward structure (agents are cooperative, not regulatory)
-
-QuantHive's framework generalizes to:
-- **Healthcare**: diagnostic AI governed by safety oversight agents
-- **Autonomous systems**: vehicle AI constrained by regulatory agents
-- **Legal AI**: document generation agents subject to compliance reviewers
-
-Any domain where AI must operate under institutional oversight can benefit from **adversarial multi-agent governance training**.
-
----
-
-**Built for the OpenEnv April '26 Hackathon | Theme 1: Multi-Agent Interactions**
-**Sub-themes: Fleet AI — Scalable Oversight | Halluminate — Multi-Actor Environments**
-**Author**: Arka Sarkar
+*Check out the full project on GitHub and see the live multi-agent choregraphy on our Hugging Face Space! All links are available in the repository `README.md`.*
