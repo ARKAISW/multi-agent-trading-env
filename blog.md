@@ -66,4 +66,4 @@ Finance serves as a high-pressure test case. The larger question is whether auto
 I set out to determine if AI could be taught institutional discipline. The surprising outcome was not that the model became more profitable first. It became more disciplined first.
 
 ---
-*Check out the full project on GitHub and see the live multi-agent choregraphy on our Hugging Face Space! All links are available in the repository [README.md](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/README.md).*
+*Check out the full project and see the live multi-agent choreography on our Hugging Face Space! All links and documents are available in the Space's [README.md](https://huggingface.co/spaces/ARKAISW/QuantHive/blob/main/README.md).*
