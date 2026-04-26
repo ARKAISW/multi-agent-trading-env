@@ -108,50 +108,40 @@ def main():
     prompts = [{"prompt": build_prompt_multiagent(sc)} for sc in scenarios]
     dataset = Dataset.from_list(prompts)
 
-    # ── Step 3: Load model ────────────────────────────────────────────────────
-    print(f"\n🤖 Loading model: {MODEL_NAME}")
-    from unsloth import FastLanguageModel
+    # ── Step 3: Load model natively via Transformers/PEFT ─────────────────────
+    print(f"\n🤖 Loading model natively: {MODEL_NAME}")
+    from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+    from peft import get_peft_model, LoraConfig, TaskType
 
-    # Do NOT call PatchFastRL — it causes JIT compilation issues on cloud
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_name=MODEL_NAME,
-        max_seq_length=MAX_SEQ_LENGTH,
-        dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
-        load_in_4bit=True,
-    )
-    model = FastLanguageModel.get_peft_model(
-        model,
-        r=16,
-        target_modules=[
-            "q_proj", "k_proj", "v_proj", "o_proj",
-            "gate_proj", "up_proj", "down_proj",
-        ],
-        lora_alpha=16,
-        lora_dropout=0,
-        bias="none",
-        use_gradient_checkpointing="unsloth",
-        random_state=SEED,
-        use_rslora=False,
-    )
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    print("   Model loaded + LoRA applied.")
 
-    # ── Step 4: Patch GRPOConfig for missing Unsloth attrs ────────────────────
-    from trl.trainer.grpo_config import GRPOConfig
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+    )
 
-    _unsloth_attrs = {
-        "unsloth_num_chunks": 1,
-        "unsloth_grpo_mini_batch": 64,
-        "unsloth_grpo_logit_chunk_multiplier": 1,
-        "unsloth_logit_chunk_multiplier": 1,
-        "loss_type": "grpo",
-    }
-    for attr, default in _unsloth_attrs.items():
-        if not hasattr(GRPOConfig, attr):
-            setattr(GRPOConfig, attr, default)
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_NAME,
+        quantization_config=bnb_config,
+        device_map="auto",
+        torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+    )
+
+    peft_config = LoraConfig(
+        task_type=TaskType.CAUSAL_LM,
+        r=16,
+        lora_alpha=16,
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        bias="none",
+    )
+    model = get_peft_model(model, peft_config)
+    print("   Native model loaded + LoRA applied.")
 
     # ── Step 5: Build trainer ─────────────────────────────────────────────────
+    from trl.trainer.grpo_config import GRPOConfig
     from trl.trainer.grpo_trainer import GRPOTrainer
 
     from env.reward import (
@@ -223,7 +213,7 @@ def main():
 
     # ── Step 8: Generate sample outputs (CRITICAL for judge review) ───────────
     print(f"\n📝 Generating {NUM_SAMPLE_OUTPUTS} sample outputs from trained model...")
-    FastLanguageModel.for_inference(model)
+    model.eval()
 
     sample_outputs = []
     for i in range(min(NUM_SAMPLE_OUTPUTS, len(scenarios))):
@@ -374,11 +364,8 @@ def main():
 
     # ── Step 10: Save model ───────────────────────────────────────────────────
     print(f"\n💾 Saving model to {OUTPUT_DIR}...")
-    if hasattr(model, "save_pretrained_merged"):
-        model.save_pretrained_merged(OUTPUT_DIR, tokenizer, save_method="merged_16bit")
-    else:
-        model.save_pretrained(OUTPUT_DIR)
-        tokenizer.save_pretrained(OUTPUT_DIR)
+    model.save_pretrained(OUTPUT_DIR)
+    tokenizer.save_pretrained(OUTPUT_DIR)
 
     # ── Step 11: Push to HF Hub (optional) ────────────────────────────────────
     try:
