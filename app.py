@@ -10,10 +10,6 @@ Usage:
 import argparse
 import sys
 
-from training.config import TrainingConfig
-from training.train import train, run_random_baseline
-from utils.evaluate import evaluate
-
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -70,6 +66,11 @@ def main():
         fast_mode=args.fast,
     )
 
+    config_cls = None
+    if not args.demo:
+        from training.config import TrainingConfig
+        config_cls = TrainingConfig
+
     # Optionally fetch real data or generate GBM
     df = None
     if args.gbm:
@@ -84,10 +85,27 @@ def main():
         df = fetch_yfinance(args.ticker, args.start, args.end)
         print(f"Loaded {len(df)} rows of market data.\n")
 
+    if args.demo:
+        return
+
+    config = config_cls(
+        tickers=[args.ticker],
+        start_date=args.start,
+        end_date=args.end,
+        initial_cash=args.cash,
+        num_episodes=2 if args.fast else args.episodes,
+        seed=args.seed,
+        log_every=args.log_every,
+        max_steps=50 if args.fast else args.max_steps,
+        fast_mode=args.fast,
+    )
+
     if args.evaluate:
+        from utils.evaluate import evaluate
         results = evaluate(config, df=df)
         print(f"\nGrade improvement: {results['grade_improvement']:+.4f}")
     else:
+        from training.train import train
         metrics = train(config, df=df)
         print(f"\nDone! {len(metrics)} episodes completed.")
 

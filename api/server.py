@@ -29,10 +29,93 @@ from env.multi_agent_env import (
 # TradingEnv kept for backward compat data generation only (not used in endpoints)
 from training.config import TrainingConfig
 from training.train_multi_agent import (
-    RuleRiskManagerPolicy,
-    RulePortfolioManagerPolicy,
     RuleTraderPolicy,
 )
+try:
+    from unsloth import FastLanguageModel
+    HAS_UNSLOTH = True
+except ImportError:
+    HAS_UNSLOTH = False
+
+
+from huggingface_hub import snapshot_download
+
+
+class GRPOAgent:
+    """Bridges the trained GRPO model to the UI demo."""
+    def __init__(self, model_id="ARKAISW/quanthive-trader-grpo-lora"):
+        self.model_id = model_id
+        self.model = None
+        self.tokenizer = None
+        self.is_ready = False
+        
+    def load(self):
+        if not HAS_UNSLOTH:
+            print("Unsloth not installed. Falling back to rule-based.")
+            return False
+        try:
+            import torch
+            from transformers import AutoTokenizer
+            print(f"Attempting to sync GRPO model from {self.model_id}...")
+            # Auto-download from HF Hub if not local
+            local_dir = Path("models") / "grpo_hf_trained"
+            local_dir.mkdir(parents=True, exist_ok=True)
+            snapshot_download(repo_id=self.model_id, local_dir=local_dir, 
+                             allow_patterns=["*.json", "*.bin", "*.safetensors", "*.txt"])
+            
+            print(f"Loading weights from {local_dir}...")
+            self.model, self.tokenizer = FastLanguageModel.from_pretrained(
+                model_name=str(local_dir),
+                max_seq_length=2048,
+                load_in_4bit=True,
+            )
+            FastLanguageModel.for_inference(self.model)
+            self.is_ready = True
+            print("✅ GRPO Model loaded successfully.")
+            return True
+        except Exception as e:
+            print(f"Could not load GRPO model: {e}")
+            return False
+
+    def act(self, obs: np.ndarray) -> dict:
+        """Sample an action from the GRPO model."""
+        if not self.is_ready:
+            return None
+        try:
+            import torch
+            # Construct a prompt that looks like the training scenarios
+            prompt = f"Observation: {obs[:5].tolist()}... (truncated)\nResponse:"
+            inputs = self.tokenizer([prompt], return_tensors="pt").to("cuda")
+            
+            # Fast generation for demo smoothness
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    **inputs, 
+                    max_new_tokens=32,
+                    use_cache=True,
+                    pad_token_id=self.tokenizer.eos_token_id
+                )
+            
+            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            
+            # Basic parsing of the model's 'thought' or action intent
+            # If the model says 'buy' or 'up', we signal 1, etc.
+            direction = 0
+            if "buy" in response.lower() or "up" in response.lower():
+                direction = 1
+            elif "sell" in response.lower() or "down" in response.lower() or "short" in response.lower():
+                direction = 2
+                
+            return {
+                "direction": direction,
+                "size": np.array([0.15], dtype=np.float32),
+                "sl": np.array([0.0], dtype=np.float32),
+                "tp": np.array([0.0], dtype=np.float32),
+                "thought": response[:100]  # Expose thought to UI
+            }
+        except Exception as e:
+            print(f"GRPO inference error: {e}")
+            return None
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -104,6 +187,8 @@ class SimulationRunner:
 
     def __init__(self):
         self.config = TrainingConfig(tickers=["AAPL"], fast_mode=True, max_steps=100)
+        # Reduced commission for demo realism (preventing bleed from rule-based noise)
+        self.config.commission = 0.0001
 
         # ── PettingZoo multi-agent environment ──────────────────────────────
         self.env = MultiAgentTradingEnv(
@@ -139,14 +224,18 @@ class SimulationRunner:
         }
         self._openenv_env.reset()
 
+        # ── GRPO ML Agent (Bridges to real trained weights) ──────────────────
+        self.grpo_agent = GRPOAgent()
+        self.is_ml_active = self.grpo_agent.load()
+
         # ── Initialize demo PZ env ──────────────────────────────────────────
         self.env.reset()
         self.done = False
 
         sim_state["engine"] = {
             "name":          "Multi-Agent Governance (PettingZoo AEC)",
-            "mode":          "Rule Fallback",
-            "policy_active": False,
+            "mode":          "GRPO (Trained Model)" if self.is_ml_active else "Rule Fallback",
+            "policy_active": self.is_ml_active,
             "note":          "Three independent RL agents negotiating via AEC turns: RiskManager → PortfolioManager → Trader.",
         }
 
@@ -194,7 +283,16 @@ class SimulationRunner:
                 break
 
             obs = self.env.observe(agent)
-            action = self.policies[agent].act(obs)
+            
+            # Use ML if active and it's the Trader's turn
+            action = None
+            if self.is_ml_active and agent == TRADER:
+                ml_action = self.grpo_agent.act(obs)
+                if ml_action:
+                    action = ml_action
+            
+            if action is None:
+                action = self.policies[agent].act(obs)
 
             if agent == RISK_MANAGER:
                 rm_action = action
