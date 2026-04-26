@@ -29,6 +29,8 @@ from env.multi_agent_env import (
 # TradingEnv kept for backward compat data generation only (not used in endpoints)
 from training.config import TrainingConfig
 from training.train_multi_agent import (
+    RulePortfolioManagerPolicy,
+    RuleRiskManagerPolicy,
     RuleTraderPolicy,
 )
 try:

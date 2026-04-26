@@ -44,9 +44,13 @@ export const useSimulationStore = create((set, get) => ({
   priceHistory: [{ step: 0, price: initialState.chart.price }],
   lastPortfolioDelta: 0,
   lastPriceDelta: 0,
+  lastError: '',
   fetchState: async () => {
     try {
       const res = await fetch(`${API_BASE}/state`);
+      if (!res.ok) {
+        throw new Error(`State request failed (${res.status})`);
+      }
       const data = await res.json();
 
       set((state) => {
@@ -67,27 +71,39 @@ export const useSimulationStore = create((set, get) => ({
                 price: data.chart.price,
               })
             : state.priceHistory,
+          lastError: '',
         };
       });
     } catch (error) {
       console.error('Error fetching state:', error);
+      set({ lastError: error.message || 'Unable to fetch simulator state.' });
     }
   },
   toggleSimulation: async (isRunning) => {
     const endpoint = isRunning ? '/stop' : '/start';
     try {
-      await fetch(`${API_BASE}${endpoint}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}${endpoint}`, { method: 'POST' });
+      if (!res.ok) {
+        throw new Error(`${isRunning ? 'Stop' : 'Start'} request failed (${res.status})`);
+      }
+      set({ lastError: '' });
       get().fetchState();
     } catch (error) {
       console.error(`Error toggling simulation to ${!isRunning}:`, error);
+      set({ lastError: error.message || 'Unable to toggle the demo.' });
     }
   },
   stepSimulation: async () => {
     try {
-      await fetch(`${API_BASE}/step`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/step`, { method: 'POST' });
+      if (!res.ok) {
+        throw new Error(`Step request failed (${res.status})`);
+      }
+      set({ lastError: '' });
       get().fetchState();
     } catch (error) {
       console.error('Error stepping simulation:', error);
+      set({ lastError: error.message || 'Unable to step the demo.' });
     }
   },
 }));
